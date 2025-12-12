@@ -1,0 +1,41 @@
+{% extends 'auth/base_auth.html' %}
+
+{% block content %}
+<div class="text-center">
+    <!-- Success animation -->
+    <div class="mb-8 inline-flex items-center justify-center">
+        <div class="relative">
+            <div class="w-24 h-24 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center">
+                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+            </div>
+            <!-- Celebration sparkles -->
+            <div class="absolute inset-0">
+                <span class="absolute top-0 left-1/4 text-yellow-400 animate-ping">✨</span>
+                <span class="absolute top-1/4 right-0 text-yellow-400 animate-ping" style="animation-delay: 0.2s;">✨</span>
+                <span class="absolute bottom-0 left-0 text-yellow-400 animate-ping" style="animation-delay: 0.4s;">✨</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Title -->
+    <h1 class="text-2xl font-bold text-white mb-3">Email Verified! 🎉</h1>
+    
+    <!-- Description -->
+    <p class="text-white/60 mb-8">
+        Your account is now active.<br>
+        Let's set up your first kiosk.
+    </p>
+    
+    <!-- Continue button -->
+    <a href="{% url 'core:onboarding' %}" class="btn-primary inline-flex items-center justify-center gap-2">
+        Get Started
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+    </a>
+</div>
+{% endblock %}

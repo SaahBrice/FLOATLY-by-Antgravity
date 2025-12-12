@@ -1,0 +1,71 @@
+{% extends 'auth/base_auth.html' %}
+
+{% block content %}
+<div x-data="{ loading: false }">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-2xl font-bold text-white mb-2">Resend Verification</h1>
+        <p class="text-white/60 text-sm">Enter your email to receive a new verification link</p>
+    </div>
+    
+    <!-- Django messages -->
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="p-4 rounded-xl {% if message.tags == 'success' %}bg-green-500/20 border border-green-500/30{% elif message.tags == 'error' %}bg-red-500/20 border border-red-500/30{% else %}bg-blue-500/20 border border-blue-500/30{% endif %}">
+            <p class="text-sm {% if message.tags == 'success' %}text-green-300{% elif message.tags == 'error' %}text-red-300{% else %}text-blue-300{% endif %}">
+                {{ message }}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Form -->
+    <form method="post" @submit="loading = true" class="space-y-5">
+        {% csrf_token %}
+        
+        <!-- Email -->
+        <div>
+            <div class="relative">
+                <input type="email" 
+                       name="email" 
+                       id="id_email"
+                       placeholder="Email address"
+                       required
+                       inputmode="email"
+                       autocomplete="email"
+                       class="form-input {% if form.email.errors %}border-red-500{% endif %}">
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-white/30">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                </div>
+            </div>
+            {% if form.email.errors %}
+            <p class="mt-2 text-red-400 text-sm">{{ form.email.errors.0 }}</p>
+            {% endif %}
+        </div>
+        
+        <!-- Submit button -->
+        <button type="submit" 
+                class="btn-primary flex items-center justify-center gap-2"
+                :disabled="loading">
+            <span x-show="!loading">Send Verification Link</span>
+            <span x-show="loading" class="flex items-center gap-2">
+                <div class="spinner"></div>
+                Sending...
+            </span>
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block footer %}
+<p class="text-center mt-6 text-white/50 text-sm">
+    Remember your password?
+    <a href="{% url 'core:login' %}" class="text-primary-400 hover:text-primary-300 font-medium ml-1">
+        Log in
+    </a>
+</p>
+{% endblock %}

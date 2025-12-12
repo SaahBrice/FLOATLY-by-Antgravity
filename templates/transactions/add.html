@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Transaction - {{ kiosk.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen pb-8"
+     x-data="transactionForm()"
+     x-init="init()">
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-white/10">
+        <div class="flex items-center justify-between px-4 py-3">
+            <a href="{% url 'core:dashboard' %}" class="p-2 text-white/70 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <h1 class="text-lg font-semibold text-white">Add Transaction</h1>
+            <div class="w-10"></div>
+        </div>
+    </header>
+    
+    <main class="p-4 max-w-lg mx-auto">
+        <!-- Kiosk info -->
+        <div class="flex items-center gap-3 mb-6 p-3 bg-white/5 rounded-xl">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-white font-medium">{{ kiosk.name }}</p>
+                <p class="text-white/50 text-sm">{{ kiosk.location|default:"No location" }}</p>
+            </div>
+        </div>
+        
+        {% if from_sms %}
+        <!-- SMS parsed notice -->
+        <div class="mb-6 p-4 bg-blue-500/20 border border-blue-500/30 rounded-xl">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+                <div>
+                    <p class="text-blue-300 font-medium">SMS Parsed</p>
+                    <p class="text-blue-300/70 text-sm">Data extracted from your SMS ({{ sms_confidence }}% confidence). Please verify.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Transaction Form -->
+        <form method="post" 
+              @submit="handleSubmit"
+              class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Transaction Type Toggle -->
+            <div>
+                <label class="block text-white/70 text-sm font-medium mb-3">Transaction Type</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="relative cursor-pointer">
+                        <input type="radio" 
+                               name="transaction_type" 
+                               value="DEPOSIT"
+                               x-model="transactionType"
+                               class="peer sr-only"
+                               @change="calculateProfit()"
+                               {% if form.transaction_type.value == 'DEPOSIT' or not form.transaction_type.value %}checked{% endif %}>
+                        <div class="p-4 rounded-xl border-2 border-white/10 bg-white/5 text-center transition
+                                    peer-checked:border-green-500 peer-checked:bg-green-500/20">
+                            <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-green-500/20 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                </svg>
+                            </div>
+                            <p class="font-semibold text-white">Cash In</p>
+                            <p class="text-white/50 text-xs">Deposit</p>
+                        </div>
+                    </label>
+                    
+                    <label class="relative cursor-pointer">
+                        <input type="radio" 
+                               name="transaction_type" 
+                               value="WITHDRAWAL"
+                               x-model="transactionType"
+                               class="peer sr-only"
+                               @change="calculateProfit()"
+                               {% if form.transaction_type.value == 'WITHDRAWAL' %}checked{% endif %}>
+                        <div class="p-4 rounded-xl border-2 border-white/10 bg-white/5 text-center transition
+                                    peer-checked:border-orange-500 peer-checked:bg-orange-500/20">
+                            <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-orange-500/20 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                </svg>
+                            </div>
+                            <p class="font-semibold text-white">Cash Out</p>
+                            <p class="text-white/50 text-xs">Withdrawal</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Network Selector -->
+            <div>
+                <label for="id_network" class="block text-white/70 text-sm font-medium mb-2">Network</label>
+                <div class="grid grid-cols-2 gap-2">
+                    {% for network in networks %}
+                    <label class="relative cursor-pointer">
+                        <input type="radio" 
+                               name="network" 
+                               value="{{ network.id }}"
+                               x-model="networkId"
+                               class="peer sr-only"
+                               @change="calculateProfit()"
+                               {% if form.network.value == network.id %}checked{% endif %}>
+                        <div class="p-3 rounded-xl border border-white/10 bg-white/5 flex items-center gap-3 transition
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-500/20">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
+                                 style="background-color: {{ network.color }}20; color: {{ network.color }}">
+                                {{ network.code }}
+                            </div>
+                            <span class="text-white text-sm font-medium truncate">{{ network.name }}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% if form.network.errors %}
+                <p class="mt-2 text-red-400 text-sm">{{ form.network.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Amount Input -->
+            <div>
+                <label for="id_amount" class="block text-white/70 text-sm font-medium mb-2">Amount (CFA)</label>
+                <div class="relative">
+                    <input type="number" 
+                           name="amount" 
+                           id="id_amount"
+                           x-model="amount"
+                           @input="debouncedCalculate()"
+                           value="{{ form.amount.value|default:'' }}"
+                           placeholder="0"
+                           required
+                           inputmode="numeric"
+                           min="1"
+                           step="any"
+                           class="form-input text-3xl font-bold text-center py-6 {% if form.amount.errors %}border-red-500{% endif %}">
+                </div>
+                {% if form.amount.errors %}
+                <p class="mt-2 text-red-400 text-sm">{{ form.amount.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Profit Display -->
+            <div>
+                <label class="block text-white/70 text-sm font-medium mb-2">
+                    Profit (CFA)
+                    <span class="text-white/40 text-xs ml-1">Auto-calculated</span>
+                </label>
+                <div id="profit-container">
+                    <div class="relative">
+                        <input type="number" 
+                               name="profit" 
+                               id="id_profit"
+                               x-model="profit"
+                               :value="profit"
+                               placeholder="Enter amount first"
+                               class="form-input text-lg font-semibold"
+                               :class="{'text-green-400': profit > 0}"
+                               inputmode="numeric"
+                               step="any">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-white/30">
+                            CFA
+                        </div>
+                    </div>
+                    <p x-show="calculating" class="text-white/40 text-xs mt-1">
+                        <span class="inline-block animate-pulse">Calculating...</span>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Optional Fields (Collapsible) -->
+            <div x-data="{ showOptional: false }">
+                <button type="button" 
+                        @click="showOptional = !showOptional"
+                        class="flex items-center gap-2 text-white/50 text-sm hover:text-white transition">
+                    <svg class="w-4 h-4 transition-transform" :class="{'rotate-90': showOptional}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    Optional Details
+                </button>
+                
+                <div x-show="showOptional" x-transition class="space-y-4 mt-4">
+                    <!-- Customer Phone -->
+                    <div>
+                        <label for="id_customer_phone" class="block text-white/70 text-sm font-medium mb-2">Customer Phone</label>
+                        <input type="tel" 
+                               name="customer_phone" 
+                               id="id_customer_phone"
+                               value="{{ form.customer_phone.value|default:'' }}"
+                               placeholder="+237..."
+                               class="form-input"
+                               inputmode="tel">
+                    </div>
+                    
+                    <!-- Transaction Reference -->
+                    <div>
+                        <label for="id_transaction_ref" class="block text-white/70 text-sm font-medium mb-2">Transaction ID</label>
+                        <input type="text" 
+                               name="transaction_ref" 
+                               id="id_transaction_ref"
+                               value="{{ form.transaction_ref.value|default:'' }}"
+                               placeholder="From receipt"
+                               class="form-input">
+                    </div>
+                    
+                    <!-- Notes -->
+                    <div>
+                        <label for="id_notes" class="block text-white/70 text-sm font-medium mb-2">Notes</label>
+                        <textarea name="notes" 
+                                  id="id_notes"
+                                  rows="2"
+                                  placeholder="Any notes..."
+                                  class="form-input">{{ form.notes.value|default:'' }}</textarea>
+                    </div>
+                </div>
+            </div>
+            
+            {% if form.sms_text.value %}
+            <input type="hidden" name="sms_text" value="{{ form.sms_text.value }}">
+            {% endif %}
+            
+            <!-- Submit Button -->
+            <button type="submit" 
+                    class="btn-primary w-full py-4 text-lg"
+                    :disabled="submitting || !amount || amount <= 0">
+                <span x-show="!submitting" class="flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Save Transaction
+                </span>
+                <span x-show="submitting" class="flex items-center justify-center gap-2">
+                    <div class="spinner"></div>
+                    Saving...
+                </span>
+            </button>
+        </form>
+        
+        <!-- Alternative Input Methods -->
+        <div class="mt-8 pt-6 border-t border-white/10">
+            <p class="text-white/40 text-sm text-center mb-4">Or import from:</p>
+            <div class="flex justify-center gap-4">
+                <!-- Camera/Photo -->
+                <label class="cursor-pointer">
+                    <input type="file" 
+                           accept="image/*" 
+                           capture="environment"
+                           @change="handleImageUpload($event)"
+                           class="hidden">
+                    <div class="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition">
+                        <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                        <span class="text-white/70 text-sm">Photo</span>
+                    </div>
+                </label>
+                
+                <!-- Gallery -->
+                <label class="cursor-pointer">
+                    <input type="file" 
+                           accept="image/*"
+                           @change="handleImageUpload($event)"
+                           class="hidden">
+                    <div class="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition">
+                        <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <span class="text-white/70 text-sm">Gallery</span>
+                    </div>
+                </label>
+            </div>
+        </div>
+        
+        <!-- Processing overlay -->
+        <div x-show="processing" 
+             x-transition
+             class="fixed inset-0 z-50 bg-slate-900/90 flex items-center justify-center">
+            <div class="text-center">
+                <div class="w-16 h-16 mx-auto mb-4 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-white font-medium">Processing image...</p>
+                <p class="text-white/50 text-sm">AI is extracting transaction data</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function transactionForm() {
+    return {
+        transactionType: '{{ form.transaction_type.value|default:"DEPOSIT" }}',
+        networkId: '{{ form.network.value|default:"" }}',
+        amount: '{{ form.amount.value|default:"" }}',
+        profit: '{{ form.profit.value|default:"" }}',
+        calculating: false,
+        submitting: false,
+        processing: false,
+        debounceTimer: null,
+        
+        init() {
+            // If we have initial values, calculate profit
+            if (this.amount && this.networkId) {
+                this.calculateProfit();
+            }
+        },
+        
+        debouncedCalculate() {
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = setTimeout(() => {
+                this.calculateProfit();
+            }, 300);
+        },
+        
+        async calculateProfit() {
+            if (!this.amount || !this.networkId || this.amount <= 0) {
+                return;
+            }
+            
+            this.calculating = true;
+            
+            try {
+                const params = new URLSearchParams({
+                    network: this.networkId,
+                    amount: this.amount,
+                    transaction_type: this.transactionType
+                });
+                
+                const response = await fetch(`/transactions/calculate-profit/?${params}`);
+                const html = await response.text();
+                
+                // Parse the response to extract profit value
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const profitInput = doc.querySelector('input[name="profit"]');
+                
+                if (profitInput && profitInput.value) {
+                    this.profit = profitInput.value;
+                }
+            } catch (error) {
+                console.error('Error calculating profit:', error);
+            } finally {
+                this.calculating = false;
+            }
+        },
+        
+        async handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            this.processing = true;
+            
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                const response = await fetch('/transactions/process-receipt/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to process image');
+                }
+                
+                const data = await response.json();
+                
+                // Fill form with extracted data
+                if (data.network_id) {
+                    this.networkId = data.network_id;
+                }
+                if (data.transaction_type) {
+                    this.transactionType = data.transaction_type;
+                }
+                if (data.amount) {
+                    this.amount = data.amount;
+                }
+                if (data.customer_phone) {
+                    document.getElementById('id_customer_phone').value = data.customer_phone;
+                }
+                if (data.transaction_ref) {
+                    document.getElementById('id_transaction_ref').value = data.transaction_ref;
+                }
+                
+                // Calculate profit with new values
+                await this.calculateProfit();
+                
+                // Show confidence
+                if (data.confidence < 0.5) {
+                    window.showToast && showToast('Low confidence extraction. Please verify the data.', 'warning');
+                } else {
+                    window.showToast && showToast('Receipt processed! Please verify the data.', 'success');
+                }
+                
+            } catch (error) {
+                console.error('Error processing image:', error);
+                window.showToast && showToast('Failed to process image. Please enter manually.', 'error');
+            } finally {
+                this.processing = false;
+            }
+        },
+        
+        handleSubmit(event) {
+            this.submitting = true;
+        }
+    }
+}
+</script>
+{% endblock %}

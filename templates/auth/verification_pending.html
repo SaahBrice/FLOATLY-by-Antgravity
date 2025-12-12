@@ -1,0 +1,97 @@
+{% extends 'auth/base_auth.html' %}
+
+{% block content %}
+<div class="text-center">
+    <!-- Animated envelope icon -->
+    <div class="mb-8 inline-flex items-center justify-center">
+        <div class="relative">
+            <div class="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500/20 to-purple-500/20 flex items-center justify-center pulse-slow">
+                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center shadow-lg">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                </div>
+            </div>
+            <!-- Animated dots -->
+            <div class="absolute -right-2 top-1/2 -translate-y-1/2">
+                <span class="flex gap-1">
+                    <span class="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style="animation-delay: 0s;"></span>
+                    <span class="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style="animation-delay: 0.1s;"></span>
+                    <span class="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style="animation-delay: 0.2s;"></span>
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Title -->
+    <h1 class="text-2xl font-bold text-white mb-3">Check Your Email</h1>
+    
+    <!-- Description -->
+    <p class="text-white/60 mb-6">
+        We've sent a verification link to
+        {% if email %}
+        <span class="text-white font-medium block mt-1">{{ email }}</span>
+        {% else %}
+        <span class="text-white font-medium">your email address</span>
+        {% endif %}
+    </p>
+    
+    <!-- Instructions -->
+    <div class="bg-white/5 rounded-xl p-4 mb-6 text-left">
+        <p class="text-white/70 text-sm mb-3">To complete your registration:</p>
+        <ol class="text-white/50 text-sm space-y-2">
+            <li class="flex items-start gap-2">
+                <span class="flex-shrink-0 w-5 h-5 bg-primary-500/20 text-primary-400 rounded-full text-xs flex items-center justify-center mt-0.5">1</span>
+                Open your email inbox
+            </li>
+            <li class="flex items-start gap-2">
+                <span class="flex-shrink-0 w-5 h-5 bg-primary-500/20 text-primary-400 rounded-full text-xs flex items-center justify-center mt-0.5">2</span>
+                Look for an email from Floatly
+            </li>
+            <li class="flex items-start gap-2">
+                <span class="flex-shrink-0 w-5 h-5 bg-primary-500/20 text-primary-400 rounded-full text-xs flex items-center justify-center mt-0.5">3</span>
+                Click the verification link
+            </li>
+        </ol>
+    </div>
+    
+    <!-- Django messages -->
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="p-4 rounded-xl {% if message.tags == 'success' %}bg-green-500/20 border border-green-500/30{% else %}bg-blue-500/20 border border-blue-500/30{% endif %}">
+            <p class="text-sm {% if message.tags == 'success' %}text-green-300{% else %}text-blue-300{% endif %}">
+                {{ message }}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Resend link -->
+    <p class="text-white/50 text-sm mb-4">
+        Didn't receive the email?
+    </p>
+    
+    <a href="{% url 'core:resend_verification' %}" class="btn-secondary inline-flex items-center justify-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Resend Verification Email
+    </a>
+    
+    <!-- Spam reminder -->
+    <p class="mt-6 text-white/40 text-xs">
+        Check your spam folder if you don't see it in your inbox.
+    </p>
+</div>
+{% endblock %}
+
+{% block footer %}
+<p class="text-center mt-6 text-white/50 text-sm">
+    Wrong email?
+    <a href="{% url 'core:register' %}" class="text-primary-400 hover:text-primary-300 font-medium ml-1">
+        Register again
+    </a>
+</p>
+{% endblock %}
