@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit {{ kiosk.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen pb-8">
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-white/10">
+        <div class="flex items-center justify-between px-4 py-3">
+            <a href="{% url 'core:dashboard' %}" class="p-2 text-white/70 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <h1 class="text-lg font-semibold text-white">Edit Kiosk</h1>
+            <div class="w-10"></div>
+        </div>
+    </header>
+    
+    <main class="p-4 max-w-lg mx-auto">
+        <!-- Kiosk Icon -->
+        <div class="flex justify-center mb-6">
+            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-xl">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+            </div>
+        </div>
+        
+        <!-- Form -->
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Kiosk Name -->
+            <div>
+                <label for="id_kiosk_name" class="block text-white/70 text-sm font-medium mb-2">
+                    Kiosk Name <span class="text-red-400">*</span>
+                </label>
+                <input type="text" 
+                       name="kiosk_name" 
+                       id="id_kiosk_name"
+                       value="{{ form.kiosk_name.value|default:kiosk.name }}"
+                       required
+                       placeholder="e.g., Akwa Main Shop"
+                       class="form-input {% if form.kiosk_name.errors %}border-red-500{% endif %}">
+                {% if form.kiosk_name.errors %}
+                <p class="mt-2 text-red-400 text-sm">{{ form.kiosk_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Location -->
+            <div>
+                <label for="id_location" class="block text-white/70 text-sm font-medium mb-2">
+                    Location
+                    <span class="text-white/40 text-xs ml-1">(optional)</span>
+                </label>
+                <input type="text" 
+                       name="location" 
+                       id="id_location"
+                       value="{{ form.location.value|default:kiosk.location }}"
+                       placeholder="e.g., Douala, Akwa"
+                       class="form-input">
+                <p class="mt-1 text-white/40 text-xs">Help identify this kiosk from your others</p>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="btn-primary w-full py-4 text-lg flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Save Changes
+            </button>
+            
+            <!-- Cancel -->
+            <a href="{% url 'core:dashboard' %}" 
+               class="block text-center text-white/50 hover:text-white py-2">
+                Cancel
+            </a>
+        </form>
+        
+        <!-- Danger Zone -->
+        <div class="mt-12 pt-6 border-t border-white/10">
+            <h3 class="text-red-400 font-medium mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Danger Zone
+            </h3>
+            <a href="{% url 'core:delete_kiosk' slug=kiosk.slug %}"
+               class="block w-full py-3 px-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-medium rounded-xl transition text-center">
+                Delete this kiosk
+            </a>
+        </div>
+    </main>
+</div>
+{% endblock %}

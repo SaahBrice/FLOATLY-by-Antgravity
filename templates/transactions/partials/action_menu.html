@@ -1,0 +1,51 @@
+<!-- Transaction action menu - loaded via HTMX on tap -->
+<div class="bg-slate-700/80 backdrop-blur-sm rounded-xl border border-white/10 p-2 flex items-center gap-2 animate-slide-down"
+     x-data="{ open: true }"
+     x-show="open"
+     x-transition:enter="transition ease-out duration-200"
+     x-transition:enter-start="opacity-0 transform -translate-y-2"
+     x-transition:enter-end="opacity-100 transform translate-y-0">
+    
+    {% if can_edit %}
+    <a href="{% url 'core:edit_transaction' pk=transaction.id %}"
+       class="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+        <span class="text-sm font-medium">Edit</span>
+    </a>
+    {% endif %}
+    
+    {% if can_delete %}
+    <a href="{% url 'core:delete_transaction' pk=transaction.id %}"
+       class="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        <span class="text-sm font-medium">Delete</span>
+    </a>
+    {% endif %}
+    
+    <button @click="open = false; $el.closest('[data-transaction]').classList.remove('expanded')"
+            class="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    </button>
+</div>
+
+<style>
+@keyframes slide-down {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.animate-slide-down {
+    animation: slide-down 0.2s ease-out;
+}
+</style>

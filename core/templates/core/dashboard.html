@@ -301,4 +301,41 @@
         </div>
     </nav>
 </div>
+
+<script>
+// Share transaction using Web Share API
+async function shareTransaction(type, network, amount, profit, timestamp) {
+    const shareText = `📱 Floatly Transaction Receipt
+
+🏪 ${type} - ${network}
+💵 Amount: ${amount} CFA
+💰 Profit: ${profit} CFA
+📅 Date: ${timestamp}
+
+Powered by Floatly`;
+
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: `${type} - ${amount} CFA`,
+                text: shareText,
+            });
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                console.error('Share failed:', err);
+            }
+        }
+    } else {
+        // Fallback: copy to clipboard
+        try {
+            await navigator.clipboard.writeText(shareText);
+            window.showToast && showToast('Copied to clipboard!', 'success');
+        } catch (err) {
+            console.error('Copy failed:', err);
+            alert(shareText);
+        }
+    }
+}
+</script>
 {% endblock %}
+

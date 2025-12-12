@@ -277,3 +277,159 @@ class ShareTargetView(LoginRequiredMixin, View):
             return redirect('core:dashboard')
         
         return redirect(f"{reverse('core:add_transaction')}?text={text}")
+
+
+class EditTransactionView(LoginRequiredMixin, FormView):
+    """
+    Edit an existing transaction.
+    Only kiosk owner/members can edit.
+    """
+    template_name = 'transactions/edit.html'
+    form_class = TransactionForm
+    login_url = '/auth/login/'
+    
+    def dispatch(self, request, *args, **kwargs):
+        self.transaction = get_object_or_404(Transaction, pk=kwargs.get('pk'))
+        self.kiosk = self.transaction.kiosk
+        
+        # Verify access
+        if not self._user_can_access_kiosk(request.user, self.kiosk):
+            raise Http404("Access denied")
+        
+        return super().dispatch(request, *args, **kwargs)
+    
+    def _user_can_access_kiosk(self, user, kiosk):
+        """Check if user has access to kiosk."""
+        if kiosk.owner == user:
+            return True
+        return KioskMember.objects.filter(kiosk=kiosk, user=user).exists()
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['kiosk'] = self.kiosk
+        kwargs['user'] = self.request.user
+        kwargs['instance'] = self.transaction
+        return kwargs
+    
+    def get_initial(self):
+        tx = self.transaction
+        return {
+            'network': tx.network_id,
+            'transaction_type': tx.transaction_type,
+            'amount': tx.amount,
+            'profit': tx.profit,
+            'customer_phone': tx.customer_phone,
+            'transaction_ref': tx.transaction_ref,
+            'notes': tx.notes,
+        }
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Edit Transaction'
+        context['kiosk'] = self.kiosk
+        context['transaction'] = self.transaction
+        context['networks'] = Network.objects.filter(is_active=True)
+        context['is_edit'] = True
+        return context
+    
+    def form_valid(self, form):
+        # Store old values for logging
+        old_amount = self.transaction.amount
+        old_profit = self.transaction.profit
+        
+        transaction = form.save()
+        
+        # Log the edit
+        logger.info(
+            f"Transaction edited: id={transaction.id}, user={self.request.user.email}, "
+            f"kiosk={self.kiosk.name}, old_amount={old_amount}, new_amount={transaction.amount}, "
+            f"old_profit={old_profit}, new_profit={transaction.profit}"
+        )
+        
+        messages.success(
+            self.request,
+            f'✅ Transaction updated! New profit: {transaction.profit:,.0f} CFA'
+        )
+        
+        return redirect('core:dashboard')
+
+
+class DeleteTransactionView(LoginRequiredMixin, View):
+    """
+    Delete a transaction with confirmation.
+    Only kiosk owner can delete.
+    """
+    login_url = '/auth/login/'
+    
+    def post(self, request, pk):
+        transaction = get_object_or_404(Transaction, pk=pk)
+        kiosk = transaction.kiosk
+        
+        # Only owner can delete
+        if kiosk.owner != request.user:
+            logger.warning(
+                f"Unauthorized delete attempt: user={request.user.email}, "
+                f"transaction_id={pk}, kiosk={kiosk.name}"
+            )
+            raise Http404("Only the kiosk owner can delete transactions")
+        
+        # Store details for logging before deletion
+        tx_details = {
+            'id': transaction.id,
+            'type': transaction.transaction_type,
+            'amount': str(transaction.amount),
+            'profit': str(transaction.profit),
+            'network': transaction.network.code,
+            'kiosk': kiosk.name,
+        }
+        
+        transaction.delete()
+        
+        # Log deletion
+        logger.info(
+            f"Transaction deleted: user={request.user.email}, details={tx_details}"
+        )
+        
+        messages.success(request, '🗑️ Transaction deleted successfully.')
+        
+        return redirect('core:dashboard')
+    
+    def get(self, request, pk):
+        """Show confirmation page."""
+        transaction = get_object_or_404(Transaction, pk=pk)
+        kiosk = transaction.kiosk
+        
+        # Only owner can delete
+        if kiosk.owner != request.user:
+            raise Http404("Only the kiosk owner can delete transactions")
+        
+        return render(request, 'transactions/delete_confirm.html', {
+            'page_title': 'Delete Transaction',
+            'transaction': transaction,
+            'kiosk': kiosk,
+        })
+
+
+class TransactionActionsView(LoginRequiredMixin, View):
+    """
+    HTMX endpoint that returns action menu for a transaction.
+    """
+    login_url = '/auth/login/'
+    
+    def get(self, request, pk):
+        transaction = get_object_or_404(Transaction, pk=pk)
+        kiosk = transaction.kiosk
+        
+        # Check access
+        is_owner = kiosk.owner == request.user
+        is_member = KioskMember.objects.filter(kiosk=kiosk, user=request.user).exists()
+        
+        if not is_owner and not is_member:
+            raise Http404("Access denied")
+        
+        return render(request, 'transactions/partials/action_menu.html', {
+            'transaction': transaction,
+            'can_edit': is_owner or is_member,
+            'can_delete': is_owner,  # Only owner can delete
+        })
+

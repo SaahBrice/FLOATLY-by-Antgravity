@@ -7,6 +7,7 @@ from . import views
 from . import auth_views
 from . import dashboard_views
 from . import transaction_views
+from . import kiosk_views
 
 app_name = 'core'
 
@@ -37,7 +38,7 @@ urlpatterns = [
     path('onboarding/', auth_views.OnboardingView.as_view(), name='onboarding'),
     
     # =========================================================================
-    # DASHBOARD
+    # DASHBOARD & KIOSKS
     # =========================================================================
     
     # Main dashboard
@@ -46,6 +47,10 @@ urlpatterns = [
     # Kiosk switching (HTMX)
     path('kiosk/<slug:slug>/switch/', dashboard_views.KioskSwitchView.as_view(), name='kiosk_switch'),
     
+    # Kiosk management
+    path('kiosk/<slug:slug>/edit/', kiosk_views.EditKioskView.as_view(), name='edit_kiosk'),
+    path('kiosk/<slug:slug>/delete/', kiosk_views.DeleteKioskView.as_view(), name='delete_kiosk'),
+    
     # =========================================================================
     # TRANSACTIONS
     # =========================================================================
@@ -53,6 +58,11 @@ urlpatterns = [
     # Add transaction
     path('transactions/add/', transaction_views.AddTransactionView.as_view(), name='add_transaction'),
     path('transactions/add/<slug:kiosk_slug>/', transaction_views.AddTransactionView.as_view(), name='add_transaction_kiosk'),
+    
+    # Edit/Delete transaction
+    path('transactions/<int:pk>/edit/', transaction_views.EditTransactionView.as_view(), name='edit_transaction'),
+    path('transactions/<int:pk>/delete/', transaction_views.DeleteTransactionView.as_view(), name='delete_transaction'),
+    path('transactions/<int:pk>/actions/', transaction_views.TransactionActionsView.as_view(), name='transaction_actions'),
     
     # HTMX profit calculation
     path('transactions/calculate-profit/', transaction_views.CalculateProfitView.as_view(), name='calculate_profit'),
