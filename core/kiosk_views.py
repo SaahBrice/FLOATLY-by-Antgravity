@@ -15,12 +15,34 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404
 from django.contrib import messages
 from django.db.models import Sum, Count
+from django import forms
 
 from .models import Kiosk, KioskMember, Transaction
-from .auth_forms import OnboardingForm
 
 # Logger for kiosk operations
 logger = logging.getLogger('core')
+
+
+class KioskEditForm(forms.ModelForm):
+    """Simple form for editing kiosk name and location."""
+    
+    class Meta:
+        model = Kiosk
+        fields = ['name', 'location']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Kiosk name',
+            }),
+            'location': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Location (optional)',
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['location'].required = False
 
 
 class EditKioskView(LoginRequiredMixin, FormView):
@@ -29,23 +51,25 @@ class EditKioskView(LoginRequiredMixin, FormView):
     Only owner can edit.
     """
     template_name = 'kiosks/edit.html'
-    form_class = OnboardingForm
+    form_class = KioskEditForm
     login_url = '/auth/login/'
     
     def dispatch(self, request, *args, **kwargs):
         self.kiosk = get_object_or_404(Kiosk, slug=kwargs.get('slug'))
         
+        logger.debug(f"EditKioskView dispatch: kiosk={self.kiosk.name}, user={request.user.email}")
+        
         # Only owner can edit
         if self.kiosk.owner != request.user:
+            logger.warning(f"Kiosk edit denied: user={request.user.email}, kiosk={self.kiosk.name}")
             raise Http404("Only the kiosk owner can edit")
         
         return super().dispatch(request, *args, **kwargs)
     
-    def get_initial(self):
-        return {
-            'kiosk_name': self.kiosk.name,
-            'location': self.kiosk.location or '',
-        }
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['instance'] = self.kiosk  # Pass existing kiosk for editing
+        return kwargs
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -58,18 +82,16 @@ class EditKioskView(LoginRequiredMixin, FormView):
         # Store old name for logging
         old_name = self.kiosk.name
         
-        # Update kiosk
-        self.kiosk.name = form.cleaned_data['kiosk_name']
-        self.kiosk.location = form.cleaned_data.get('location', '')
-        self.kiosk.save()
+        # Save the form (updates the kiosk)
+        kiosk = form.save()
         
         logger.info(
             f"Kiosk edited: user={self.request.user.email}, "
-            f"old_name={old_name}, new_name={self.kiosk.name}, "
-            f"location={self.kiosk.location}"
+            f"old_name={old_name}, new_name={kiosk.name}, "
+            f"location={kiosk.location}"
         )
         
-        messages.success(self.request, f'✅ Kiosk "{self.kiosk.name}" updated!')
+        messages.success(self.request, f'✅ Kiosk "{kiosk.name}" updated!')
         
         return redirect('core:dashboard')
 

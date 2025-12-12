@@ -34,18 +34,18 @@
             
             <!-- Kiosk Name -->
             <div>
-                <label for="id_kiosk_name" class="block text-white/70 text-sm font-medium mb-2">
+                <label for="id_name" class="block text-white/70 text-sm font-medium mb-2">
                     Kiosk Name <span class="text-red-400">*</span>
                 </label>
                 <input type="text" 
-                       name="kiosk_name" 
-                       id="id_kiosk_name"
-                       value="{{ form.kiosk_name.value|default:kiosk.name }}"
+                       name="name" 
+                       id="id_name"
+                       value="{{ form.name.value|default:kiosk.name }}"
                        required
                        placeholder="e.g., Akwa Main Shop"
-                       class="form-input {% if form.kiosk_name.errors %}border-red-500{% endif %}">
-                {% if form.kiosk_name.errors %}
-                <p class="mt-2 text-red-400 text-sm">{{ form.kiosk_name.errors.0 }}</p>
+                       class="form-input {% if form.name.errors %}border-red-500{% endif %}">
+                {% if form.name.errors %}
+                <p class="mt-2 text-red-400 text-sm">{{ form.name.errors.0 }}</p>
                 {% endif %}
             </div>
             
