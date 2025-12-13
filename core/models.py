@@ -524,6 +524,12 @@ class Transaction(models.Model):
         validators=[phone_validator],
         help_text='Customer phone number if known'
     )
+    customer_name = models.CharField(
+        'customer name',
+        max_length=100,
+        blank=True,
+        help_text='Customer/sender name if known'
+    )
     transaction_ref = models.CharField(
         'transaction reference',
         max_length=100,

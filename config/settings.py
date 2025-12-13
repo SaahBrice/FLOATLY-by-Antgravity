@@ -271,6 +271,17 @@ PWA_APP_SPLASH_SCREEN = [
 ]
 PWA_SERVICE_WORKER_PATH = BASE_DIR / 'static' / 'js' / 'serviceworker.js'
 
+# Share Target - Allows app to receive shared text/SMS
+PWA_APP_SHARE_TARGET = {
+    "action": "/transactions/add/",
+    "method": "GET",
+    "params": {
+        "text": "text",
+        "title": "title",
+        "url": "url"
+    }
+}
+
 
 # =============================================================================
 # SECURITY SETTINGS (Enable in Production)

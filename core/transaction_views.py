@@ -149,12 +149,36 @@ class AddTransactionView(LoginRequiredMixin, FormView):
         # Notify kiosk owner and members (except the creator)
         self._send_transaction_notifications(transaction, 'created')
         
+        # Check if AJAX request - return JSON for frontend toast
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'message': f'Transaction saved!',
+                'profit': f'{transaction.profit:,.0f}',
+                'amount': f'{transaction.amount:,.0f}',
+                'transaction_id': transaction.id
+            })
+        
+        # Regular form submission - redirect to dashboard
         messages.success(
             self.request,
             f'✅ Transaction saved! Profit: {transaction.profit:,.0f} CFA'
         )
-        
         return redirect('core:dashboard')
+    
+    def form_invalid(self, form):
+        # Check if AJAX request - return JSON error response
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            errors = []
+            for field, field_errors in form.errors.items():
+                for error in field_errors:
+                    errors.append(f"{field}: {error}" if field != '__all__' else error)
+            return JsonResponse({
+                'success': False,
+                'error': errors[0] if errors else 'Please check the form for errors',
+                'errors': errors
+            })
+        return super().form_invalid(form)
     
     def _send_transaction_notifications(self, transaction, action):
         """Send notifications to kiosk owner and members about transaction activity."""
