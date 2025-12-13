@@ -25,7 +25,9 @@ class TransactionForm(forms.ModelForm):
             'transaction_type',
             'amount',
             'profit',
+            'timestamp',
             'customer_phone',
+            'customer_name',
             'transaction_ref',
             'notes',
             'sms_text',
@@ -58,11 +60,20 @@ class TransactionForm(forms.ModelForm):
                 'inputmode': 'numeric',
                 'step': '1',
             }),
+            'timestamp': forms.DateTimeInput(attrs={
+                'class': 'form-input',
+                'type': 'datetime-local',
+            }),
             'customer_phone': forms.TextInput(attrs={
                 'class': 'form-input',
                 'placeholder': '+237...',
                 'inputmode': 'tel',
                 'autocomplete': 'tel',
+            }),
+            'customer_name': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Customer name',
+                'autocomplete': 'name',
             }),
             'transaction_ref': forms.TextInput(attrs={
                 'class': 'form-input',
@@ -92,7 +103,9 @@ class TransactionForm(forms.ModelForm):
         ]
         
         # Make optional fields not required
+        self.fields['timestamp'].required = False
         self.fields['customer_phone'].required = False
+        self.fields['customer_name'].required = False
         self.fields['transaction_ref'].required = False
         self.fields['notes'].required = False
         self.fields['sms_text'].required = False

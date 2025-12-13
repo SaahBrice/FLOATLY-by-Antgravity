@@ -7,7 +7,8 @@
      x-data="{ 
          sidebarOpen: false, 
          kioskDropdownOpen: false,
-         showFabMenu: false
+         showFabMenu: false,
+         feedbackModalOpen: false
      }">
     
     <!-- Mobile Header -->
@@ -265,6 +266,17 @@
                 </div>
             </nav>
             
+            <!-- Feedback Button -->
+            <div class="px-4 pb-2">
+                <button @click="feedbackModalOpen = true; sidebarOpen = false"
+                        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 text-purple-300 hover:from-purple-600/30 hover:to-pink-600/30 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                    </svg>
+                    <span class="text-sm font-medium">Feedback / Bug Report</span>
+                </button>
+            </div>
+            
             <!-- User section -->
             <div class="p-4 border-t border-white/10">
                 <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
@@ -381,6 +393,156 @@
             </a>
         </div>
     </nav>
+    
+    <!-- Feedback Modal (must be inside the x-data container) -->
+    <template x-if="feedbackModalOpen">
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+             @click.self="feedbackModalOpen = false"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0">
+            
+            <div class="bg-slate-800 rounded-2xl border border-white/10 max-w-md w-full shadow-2xl overflow-hidden"
+                 @click.stop>
+                <!-- Header -->
+                <div class="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-purple-600 to-pink-600">
+                    <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                        </svg>
+                        Send Feedback
+                    </h3>
+                    <button @click="feedbackModalOpen = false" 
+                            class="p-1 text-white/70 hover:text-white transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Form -->
+                <form method="post" 
+                      action="{% url 'core:feedback' %}" 
+                      enctype="multipart/form-data"
+                      class="p-4 space-y-4"
+                      x-data="{ submitting: false, success: false }"
+                      @submit.prevent="
+                          submitting = true;
+                          fetch('{% url 'core:feedback' %}', {
+                              method: 'POST',
+                              body: new FormData($el),
+                          }).then(r => r.ok ? (success = true, submitting = false) : (submitting = false, alert('Error submitting')));
+                      ">
+                    {% csrf_token %}
+                    
+                    <template x-if="success">
+                        <div class="text-center py-6">
+                            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
+                                <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h4 class="text-xl font-bold text-white mb-2">Thank you!</h4>
+                            <p class="text-white/60 mb-4">Your feedback has been submitted. We appreciate your help!</p>
+                            <button type="button" @click="feedbackModalOpen = false" 
+                                    class="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition">
+                                Close
+                            </button>
+                        </div>
+                    </template>
+                    
+                    <template x-if="!success">
+                        <div class="space-y-4">
+                            <!-- Feedback Type -->
+                            <div>
+                                <label class="block text-white/70 text-sm font-medium mb-2">Type</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="relative cursor-pointer">
+                                        <input type="radio" name="feedback_type" value="FEATURE" checked class="peer sr-only">
+                                        <div class="p-2.5 rounded-xl border border-white/10 bg-white/5 text-center transition
+                                                    peer-checked:border-purple-500 peer-checked:bg-purple-500/20">
+                                            <span class="text-white text-sm font-medium">💡 Feature</span>
+                                        </div>
+                                    </label>
+                                    <label class="relative cursor-pointer">
+                                        <input type="radio" name="feedback_type" value="BUG" class="peer sr-only">
+                                        <div class="p-2.5 rounded-xl border border-white/10 bg-white/5 text-center transition
+                                                    peer-checked:border-purple-500 peer-checked:bg-purple-500/20">
+                                            <span class="text-white text-sm font-medium">🐛 Bug</span>
+                                        </div>
+                                    </label>
+                                    <label class="relative cursor-pointer">
+                                        <input type="radio" name="feedback_type" value="IMPROVEMENT" class="peer sr-only">
+                                        <div class="p-2.5 rounded-xl border border-white/10 bg-white/5 text-center transition
+                                                    peer-checked:border-purple-500 peer-checked:bg-purple-500/20">
+                                            <span class="text-white text-sm font-medium">✨ Improvement</span>
+                                        </div>
+                                    </label>
+                                    <label class="relative cursor-pointer">
+                                        <input type="radio" name="feedback_type" value="OTHER" class="peer sr-only">
+                                        <div class="p-2.5 rounded-xl border border-white/10 bg-white/5 text-center transition
+                                                    peer-checked:border-purple-500 peer-checked:bg-purple-500/20">
+                                            <span class="text-white text-sm font-medium">📝 Other</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Title -->
+                            <div>
+                                <label class="block text-white/70 text-sm font-medium mb-2">Title</label>
+                                <input type="text" name="title" 
+                                       placeholder="Brief summary of your feedback"
+                                       required
+                                       maxlength="200"
+                                       class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
+                            </div>
+                            
+                            <!-- Message -->
+                            <div>
+                                <label class="block text-white/70 text-sm font-medium mb-2">Details</label>
+                                <textarea name="message" 
+                                          rows="3"
+                                          placeholder="Describe your suggestion or issue..."
+                                          required
+                                          class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition resize-none"></textarea>
+                            </div>
+                            
+                            <!-- Screenshot (optional) -->
+                            <div>
+                                <label class="block text-white/70 text-sm font-medium mb-2">Screenshot (optional)</label>
+                                <input type="file" name="screenshot" accept="image/*"
+                                       class="w-full text-white/60 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-500 file:text-white hover:file:bg-purple-600 file:cursor-pointer">
+                            </div>
+                            
+                            <!-- Submit -->
+                            <button type="submit" 
+                                    :disabled="submitting"
+                                    class="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50">
+                                <template x-if="!submitting">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                        </svg>
+                                        Send Feedback
+                                    </span>
+                                </template>
+                                <template x-if="submitting">
+                                    <span class="flex items-center gap-2">
+                                        <div class="spinner"></div>
+                                        Sending...
+                                    </span>
+                                </template>
+                            </button>
+                        </div>
+                    </template>
+                </form>
+            </div>
+        </div>
+    </template>
 </div>
 
 <script>
@@ -415,6 +577,22 @@ Powered by Floatly`;
             console.error('Copy failed:', err);
             alert(shareText);
         }
+    }
+}
+
+// Auto-refresh when navigating back to dashboard (e.g., from add transaction page)
+window.addEventListener('pageshow', function(event) {
+    // If page was loaded from cache (bfcache), reload to get fresh data
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+
+// Also handle cases where bfcache isn't used but page was cached
+if (performance && performance.getEntriesByType) {
+    const navEntries = performance.getEntriesByType('navigation');
+    if (navEntries.length > 0 && navEntries[0].type === 'back_forward') {
+        window.location.reload();
     }
 }
 </script>

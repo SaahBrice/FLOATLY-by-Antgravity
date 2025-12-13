@@ -11,6 +11,7 @@ from . import kiosk_views
 from . import notification_views
 from . import team_views
 from . import fraud_views
+from . import feedback_views
 
 app_name = 'core'
 
@@ -124,6 +125,12 @@ urlpatterns = [
     path('blacklist/', fraud_views.BlacklistView.as_view(), name='blacklist'),
     path('fraud/report/<int:pk>/', fraud_views.ReportDetailView.as_view(), name='fraud_detail'),
     path('api/check-phone/', fraud_views.CheckPhoneView.as_view(), name='check_phone'),
+    
+    # =========================================================================
+    # FEEDBACK
+    # =========================================================================
+    
+    path('feedback/', feedback_views.FeedbackSubmitView.as_view(), name='feedback'),
     
     # Include allauth URLs for email confirmation and social auth
     path('accounts/', include('allauth.urls')),

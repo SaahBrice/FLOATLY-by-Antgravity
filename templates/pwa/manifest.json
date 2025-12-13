@@ -1,0 +1,29 @@
+{
+    "name": "{{ pwa_name }}",
+    "short_name": "{{ pwa_short_name|default:pwa_name }}",
+    "description": "{{ pwa_description }}",
+    "start_url": "{{ pwa_start_url }}",
+    "scope": "{{ pwa_scope }}",
+    "display": "{{ pwa_display }}",
+    "orientation": "{{ pwa_orientation }}",
+    "background_color": "{{ pwa_background_color }}",
+    "theme_color": "{{ pwa_theme_color }}",
+    "icons": [
+        {% for icon in pwa_icons %}
+        {
+            "src": "{{ icon.src }}",
+            "sizes": "{{ icon.sizes }}",
+            "type": "{{ icon.type }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ],
+    "share_target": {
+        "action": "/transactions/add/",
+        "method": "GET",
+        "params": {
+            "text": "text",
+            "title": "title",
+            "url": "url"
+        }
+    }
+}

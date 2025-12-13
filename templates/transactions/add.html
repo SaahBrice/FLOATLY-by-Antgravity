@@ -192,6 +192,16 @@
                 </button>
                 
                 <div x-show="showOptional" x-transition class="space-y-4 mt-4">
+                    <!-- Transaction Date/Time -->
+                    <div>
+                        <label for="id_timestamp" class="block text-white/70 text-sm font-medium mb-2">Transaction Date & Time</label>
+                        <input type="datetime-local" 
+                               name="timestamp" 
+                               id="id_timestamp"
+                               class="form-input">
+                        <p class="text-white/40 text-xs mt-1">Leave empty for current time</p>
+                    </div>
+                    
                     <!-- Customer Phone -->
                     <div>
                         <label for="id_customer_phone" class="block text-white/70 text-sm font-medium mb-2">Customer Phone</label>
@@ -208,6 +218,17 @@
                                hx-vals='{"phone": this.value}'>
                         <!-- Blacklist Warning Container -->
                         <div id="phone-warning" class="mt-2"></div>
+                    </div>
+                    
+                    <!-- Customer Name -->
+                    <div>
+                        <label for="id_customer_name" class="block text-white/70 text-sm font-medium mb-2">Customer Name</label>
+                        <input type="text" 
+                               name="customer_name" 
+                               id="id_customer_name"
+                               value="{{ form.customer_name.value|default:'' }}"
+                               placeholder="Sender/recipient name"
+                               class="form-input">
                     </div>
                     
                     <!-- Transaction Reference -->
@@ -300,8 +321,8 @@
              class="fixed inset-0 z-50 bg-slate-900/90 flex items-center justify-center">
             <div class="text-center">
                 <div class="w-16 h-16 mx-auto mb-4 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-white font-medium">Processing image...</p>
-                <p class="text-white/50 text-sm">AI is extracting transaction data</p>
+                <p class="text-white font-medium">REEPLS AI is extracting...</p>
+                <p class="text-white/50 text-sm">Analyzing your receipt</p>
             </div>
         </div>
     </main>
@@ -320,6 +341,21 @@ function transactionForm() {
         debounceTimer: null,
         
         init() {
+            // Initialize timestamp to current LOCAL datetime
+            const now = new Date();
+            // Format as YYYY-MM-DDTHH:MM in local timezone (not UTC!)
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            
+            const timestampField = document.getElementById('id_timestamp');
+            if (timestampField && !timestampField.value) {
+                timestampField.value = localDateTime;
+            }
+            
             // If we have initial values, calculate profit
             if (this.amount && this.networkId) {
                 this.calculateProfit();
@@ -389,43 +425,121 @@ function transactionForm() {
                 
                 const data = await response.json();
                 
+                // Check if we actually extracted any useful data
+                const hasData = data.network_id || data.amount || data.transaction_type;
+                
+                if (!hasData) {
+                    // No data extracted - show clear error
+                    window.showToast && showToast('Could not extract transaction data from this image. Try a clearer receipt photo.', 'error');
+                    return;
+                }
+                
                 // Fill form with extracted data
+                let fieldsUpdated = 0;
+                
                 if (data.network_id) {
                     this.networkId = data.network_id;
+                    fieldsUpdated++;
                 }
                 if (data.transaction_type) {
                     this.transactionType = data.transaction_type;
+                    fieldsUpdated++;
                 }
                 if (data.amount) {
                     this.amount = data.amount;
+                    fieldsUpdated++;
                 }
                 if (data.customer_phone) {
                     document.getElementById('id_customer_phone').value = data.customer_phone;
+                    fieldsUpdated++;
+                }
+                if (data.customer_name) {
+                    document.getElementById('id_customer_name').value = data.customer_name;
+                    fieldsUpdated++;
                 }
                 if (data.transaction_ref) {
                     document.getElementById('id_transaction_ref').value = data.transaction_ref;
+                    fieldsUpdated++;
                 }
                 
                 // Calculate profit with new values
-                await this.calculateProfit();
+                if (this.amount && this.networkId) {
+                    await this.calculateProfit();
+                }
                 
-                // Show confidence
-                if (data.confidence < 0.5) {
-                    window.showToast && showToast('Low confidence extraction. Please verify the data.', 'warning');
+                // Show appropriate message based on confidence and fields extracted
+                if (data.confidence && data.confidence < 0.5) {
+                    window.showToast && showToast(`Low confidence extraction (${fieldsUpdated} fields). Please verify all data carefully.`, 'warning');
+                } else if (fieldsUpdated < 3) {
+                    window.showToast && showToast(`Partial extraction (${fieldsUpdated} fields found). Please complete missing fields.`, 'warning');
                 } else {
-                    window.showToast && showToast('Receipt processed! Please verify the data.', 'success');
+                    window.showToast && showToast(`Receipt processed! ${fieldsUpdated} fields extracted. Please verify.`, 'success');
                 }
                 
             } catch (error) {
                 console.error('Error processing image:', error);
-                window.showToast && showToast('Failed to process image. Please enter manually.', 'error');
+                window.showToast && showToast('Failed to process image. Please enter data manually.', 'error');
             } finally {
                 this.processing = false;
+                // Reset file input so same file can be selected again
+                event.target.value = '';
             }
         },
         
-        handleSubmit(event) {
+        async handleSubmit(event) {
+            event.preventDefault();
             this.submitting = true;
+            
+            try {
+                const form = event.target;
+                const formData = new FormData(form);
+                
+                const response = await fetch(form.action || window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show success toast
+                    window.showToast && showToast(`✅ Transaction saved! Profit: ${data.profit} CFA`, 'success');
+                    
+                    // Clear the form for next entry
+                    this.amount = '';
+                    this.profit = '';
+                    this.transactionType = 'DEPOSIT';
+                    
+                    // Clear optional fields
+                    const optionalFields = ['id_customer_phone', 'id_customer_name', 'id_transaction_ref', 'id_notes'];
+                    optionalFields.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = '';
+                    });
+                    
+                    // Focus back on amount for quick next entry
+                    setTimeout(() => {
+                        document.getElementById('id_amount').focus();
+                    }, 100);
+                } else {
+                    // Show error
+                    window.showToast && showToast(data.error || 'Failed to save transaction', 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                window.showToast && showToast('Error saving transaction. Please try again.', 'error');
+            } finally {
+                this.submitting = false;
+            }
+        },
+        
+        clearForm() {
+            this.amount = '';
+            this.profit = '';
+            this.transactionType = 'DEPOSIT';
         }
     }
 }

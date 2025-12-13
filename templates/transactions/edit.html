@@ -179,6 +179,16 @@
                 </button>
                 
                 <div x-show="showOptional" x-transition class="space-y-4 mt-4">
+                    <!-- Transaction Date/Time -->
+                    <div>
+                        <label class="block text-white/70 text-sm font-medium mb-2">Transaction Date & Time</label>
+                        <input type="datetime-local" 
+                               name="timestamp" 
+                               id="id_timestamp"
+                               value="{{ transaction.timestamp|date:'Y-m-d' }}T{{ transaction.timestamp|time:'H:i' }}"
+                               class="form-input">
+                    </div>
+                    
                     <div>
                         <label class="block text-white/70 text-sm font-medium mb-2">Customer Phone</label>
                         <input type="tel" 
@@ -187,6 +197,16 @@
                                placeholder="+237..."
                                class="form-input"
                                inputmode="tel">
+                    </div>
+                    
+                    <!-- Customer Name -->
+                    <div>
+                        <label class="block text-white/70 text-sm font-medium mb-2">Customer Name</label>
+                        <input type="text" 
+                               name="customer_name" 
+                               value="{{ transaction.customer_name|default:'' }}"
+                               placeholder="Sender/recipient name"
+                               class="form-input">
                     </div>
                     
                     <div>
