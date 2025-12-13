@@ -80,6 +80,9 @@ urlpatterns = [
     # Receipt image processing (AI)
     path('transactions/process-receipt/', transaction_views.ProcessReceiptImageView.as_view(), name='process_receipt'),
     
+    # Voice recording processing (AI)
+    path('transactions/process-voice/', transaction_views.ProcessVoiceView.as_view(), name='process_voice'),
+    
     # PWA Share Target
     path('share/', transaction_views.ShareTargetView.as_view(), name='share_target'),
     

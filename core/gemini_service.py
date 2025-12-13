@@ -225,3 +225,141 @@ def extract_transaction_from_image(image_data: bytes, mime_type: str = "image/jp
         'timestamp': result.timestamp,
         'confidence': result.confidence,
     }
+
+
+# Voice extraction prompt
+VOICE_EXTRACTION_PROMPT = """You are REEPLS AI, specialized in extracting transaction data from spoken Cameroonian mobile money descriptions.
+
+The user described a mobile money transaction. Extract the information in JSON format:
+
+{
+    "network": "MTN" or "OM" (Orange Money) or "EU" (Express Union) or null,
+    "transaction_type": "DEPOSIT" (cash in/received money) or "WITHDRAWAL" (cash out/sent money/transfer) or null,
+    "amount": number (in CFA/franc, without currency symbol),
+    "customer_phone": "phone number" or null,
+    "customer_name": "customer/sender/recipient name" or null,
+    "transaction_ref": null,
+    "timestamp": "transaction date/time in ISO format" or null,
+    "confidence": 0.0 to 1.0 (your confidence in the extraction)
+}
+
+NETWORK DETECTION RULES:
+- "MTN", "mtn", "MTN MoMo", "MoMo" → "MTN"
+- "Orange", "orange money", "OM" → "OM"
+- "Express Union", "EU" → "EU"
+
+TRANSACTION TYPE RULES:
+- "cashout", "cash out", "withdrawal", "sent", "transfer", "sending" → "WITHDRAWAL"
+- "cashin", "cash in", "deposit", "received", "receiving" → "DEPOSIT"
+
+AMOUNT RULES:
+- "15000 francs", "15,000 CFA", "quinze mille" → 15000
+- Handle spoken numbers in French or English
+
+Return ONLY valid JSON, no markdown or extra text.
+If you cannot understand a field, set it to null."""
+
+
+def extract_transaction_from_voice(audio_data: bytes, mime_type: str = "audio/webm") -> Dict[str, Any]:
+    """
+    Extract transaction data from voice recording using Gemini API.
+    
+    Args:
+        audio_data: Raw audio bytes
+        mime_type: Audio MIME type (audio/webm, audio/mp3, etc.)
+        
+    Returns:
+        Dictionary with extracted transaction data
+    """
+    api_key = os.environ.get('GOOGLE_GEMINI_API_KEY')
+    
+    if not api_key:
+        logger.warning("GOOGLE_GEMINI_API_KEY not set, returning empty result")
+        return {
+            'network': None,
+            'transaction_type': None,
+            'amount': None,
+            'customer_phone': None,
+            'customer_name': None,
+            'transaction_ref': None,
+            'timestamp': None,
+            'confidence': 0.0,
+        }
+    
+    try:
+        import requests
+        
+        # Encode audio to base64
+        audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+        
+        # Prepare request for Gemini with audio
+        payload = {
+            "contents": [{
+                "parts": [
+                    {"text": VOICE_EXTRACTION_PROMPT},
+                    {
+                        "inline_data": {
+                            "mime_type": mime_type,
+                            "data": audio_base64
+                        }
+                    }
+                ]
+            }],
+            "generationConfig": {
+                "temperature": 0.1,
+                "maxOutputTokens": 500,
+            }
+        }
+        
+        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+        
+        response = requests.post(
+            f"{api_url}?key={api_key}",
+            json=payload,
+            headers={"Content-Type": "application/json"},
+            timeout=30
+        )
+        
+        if response.status_code != 200:
+            logger.error(f"Gemini API error: {response.status_code} - {response.text}")
+            return {
+                'network': None,
+                'transaction_type': None,
+                'amount': None,
+                'customer_phone': None,
+                'customer_name': None,
+                'transaction_ref': None,
+                'timestamp': None,
+                'confidence': 0.0,
+            }
+        
+        # Parse response
+        result = response.json()
+        text_content = result.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+        
+        # Parse JSON from response
+        parsed_result = gemini_service._parse_ai_response(text_content)
+        
+        return {
+            'network': parsed_result.network,
+            'transaction_type': parsed_result.transaction_type,
+            'amount': str(parsed_result.amount) if parsed_result.amount else None,
+            'customer_phone': parsed_result.customer_phone,
+            'customer_name': parsed_result.customer_name,
+            'transaction_ref': parsed_result.transaction_ref,
+            'timestamp': parsed_result.timestamp,
+            'confidence': parsed_result.confidence,
+        }
+        
+    except Exception as e:
+        logger.exception(f"Error processing voice with Gemini API: {e}")
+        return {
+            'network': None,
+            'transaction_type': None,
+            'amount': None,
+            'customer_phone': None,
+            'customer_name': None,
+            'transaction_ref': None,
+            'timestamp': None,
+            'confidence': 0.0,
+        }

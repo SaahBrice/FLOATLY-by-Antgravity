@@ -27,7 +27,7 @@ from django.urls import reverse
 from .models import Kiosk, KioskMember, Network, CommissionRate, Transaction
 from .transaction_forms import TransactionForm
 from .sms_parser import parse_sms
-from .gemini_service import extract_transaction_from_image
+from .gemini_service import extract_transaction_from_image, extract_transaction_from_voice
 from .notification_service import notify_transaction_activity
 
 # Logger for transaction operations
@@ -302,6 +302,45 @@ class ProcessReceiptImageView(LoginRequiredMixin, View):
         
         return JsonResponse(result)
 
+
+class ProcessVoiceView(LoginRequiredMixin, View):
+    """
+    Endpoint for processing voice recordings with AI.
+    Returns extracted transaction data as JSON.
+    """
+    
+    def post(self, request):
+        if 'audio' not in request.FILES:
+            return JsonResponse({'error': 'No audio provided'}, status=400)
+        
+        audio_file = request.FILES['audio']
+        
+        # Validate file type
+        allowed_types = ['audio/webm', 'audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/ogg']
+        content_type = audio_file.content_type
+        
+        # Be lenient with content type matching
+        is_valid = any(t in content_type for t in ['audio', 'webm', 'ogg'])
+        if not is_valid:
+            return JsonResponse({'error': f'Invalid audio type: {content_type}'}, status=400)
+        
+        # Validate file size (max 2MB for 10s audio)
+        if audio_file.size > 2 * 1024 * 1024:
+            return JsonResponse({'error': 'Audio too large (max 2MB)'}, status=400)
+        
+        # Extract data using Gemini
+        audio_data = audio_file.read()
+        result = extract_transaction_from_voice(audio_data, content_type)
+        
+        # Map network code to ID
+        if result.get('network'):
+            try:
+                network = Network.objects.get(code=result['network'])
+                result['network_id'] = network.id
+            except Network.DoesNotExist:
+                pass
+        
+        return JsonResponse(result)
 
 class ShareTargetView(LoginRequiredMixin, View):
     """
