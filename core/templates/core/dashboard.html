@@ -579,6 +579,22 @@ Powered by Floatly`;
         }
     }
 }
+
+// Auto-refresh when navigating back to dashboard (e.g., from add transaction page)
+window.addEventListener('pageshow', function(event) {
+    // If page was loaded from cache (bfcache), reload to get fresh data
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+
+// Also handle cases where bfcache isn't used but page was cached
+if (performance && performance.getEntriesByType) {
+    const navEntries = performance.getEntriesByType('navigation');
+    if (navEntries.length > 0 && navEntries[0].type === 'back_forward') {
+        window.location.reload();
+    }
+}
 </script>
 {% endblock %}
 

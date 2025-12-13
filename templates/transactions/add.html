@@ -341,6 +341,21 @@ function transactionForm() {
         debounceTimer: null,
         
         init() {
+            // Initialize timestamp to current LOCAL datetime
+            const now = new Date();
+            // Format as YYYY-MM-DDTHH:MM in local timezone (not UTC!)
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            
+            const timestampField = document.getElementById('id_timestamp');
+            if (timestampField && !timestampField.value) {
+                timestampField.value = localDateTime;
+            }
+            
             // If we have initial values, calculate profit
             if (this.amount && this.networkId) {
                 this.calculateProfit();
