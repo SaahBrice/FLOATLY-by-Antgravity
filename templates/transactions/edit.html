@@ -10,11 +10,11 @@
     <!-- Header -->
     <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-white/10">
         <div class="flex items-center justify-between px-4 py-3">
-            <a href="{% url 'core:dashboard' %}" class="p-2 text-white/70 hover:text-white">
+            <button type="button" onclick="history.back()" class="p-2 text-white/70 hover:text-white">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
-            </a>
+            </button>
             <h1 class="text-lg font-semibold text-white">Edit Transaction</h1>
             <div class="w-10"></div>
         </div>
@@ -225,10 +225,10 @@
             </button>
             
             <!-- Cancel -->
-            <a href="{% url 'core:dashboard' %}" 
-               class="block text-center text-white/50 hover:text-white py-2">
+            <button type="button" onclick="history.back()"
+               class="block w-full text-center text-white/50 hover:text-white py-2">
                 Cancel
-            </a>
+            </button>
         </form>
     </main>
 </div>

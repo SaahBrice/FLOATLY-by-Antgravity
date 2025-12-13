@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} - {{ active_kiosk.name|default:"Floatly" }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-900 pb-24">
+    
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-xl border-b border-white/10">
+        <div class="flex items-center justify-between px-4 py-3">
+            <a href="{% url 'core:dashboard' %}" class="p-2 -ml-2 text-white/70 hover:text-white transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <div class="text-center flex-1">
+                <h1 class="text-lg font-bold text-white">Transactions</h1>
+                {% if active_kiosk %}
+                <p class="text-white/50 text-xs">{{ active_kiosk.name }}</p>
+                {% endif %}
+            </div>
+            <a href="{% url 'core:add_transaction' %}" 
+               class="p-2 -mr-2 text-primary-400 hover:text-primary-300 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+            </a>
+        </div>
+    </header>
+    
+    <div class="max-w-4xl mx-auto px-4 pt-4">
+        
+        <!-- Stats Summary -->
+        {% if stats %}
+        <div class="grid grid-cols-3 gap-2 mb-4">
+            <div class="bg-white/5 backdrop-blur rounded-xl p-3 border border-white/10">
+                <p class="text-xl font-bold text-white">{{ stats.total_count|default:"0" }}</p>
+                <p class="text-white/40 text-xs">Transactions</p>
+            </div>
+            <div class="bg-green-500/10 rounded-xl p-3 border border-green-500/20">
+                <p class="text-xl font-bold text-green-400">{{ stats.total_amount|floatformat:0|default:"0" }}</p>
+                <p class="text-green-400/50 text-xs">Volume CFA</p>
+            </div>
+            <div class="bg-purple-500/10 rounded-xl p-3 border border-purple-500/20">
+                <p class="text-xl font-bold text-purple-400">{{ stats.total_profit|floatformat:0|default:"0" }}</p>
+                <p class="text-purple-400/50 text-xs">Profit CFA</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Smart Search & Filters -->
+        <div class="bg-white/5 backdrop-blur rounded-2xl border border-white/10 p-4 mb-4" x-data="{ showAdvanced: false }">
+            <form method="get" class="space-y-3">
+                <!-- Search Input -->
+                <div class="relative">
+                    <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text" name="search" value="{{ search }}"
+                           placeholder="Search any transaction easily..."
+                           class="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                           autocomplete="off">
+                </div>
+                
+                <!-- Quick Filters Row -->
+                <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    <select name="type" class="flex-shrink-0 px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:ring-2 focus:ring-purple-500">
+                        <option value="">All Types</option>
+                        <option value="DEPOSIT" {% if selected_type == 'DEPOSIT' %}selected{% endif %}>Cash In</option>
+                        <option value="WITHDRAWAL" {% if selected_type == 'WITHDRAWAL' %}selected{% endif %}>Cash Out</option>
+                    </select>
+                    
+                    <select name="network" class="flex-shrink-0 px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:ring-2 focus:ring-purple-500">
+                        <option value="">All Networks</option>
+                        {% for network in networks %}
+                        <option value="{{ network.id }}" {% if selected_network == network.id|stringformat:"s" %}selected{% endif %}>
+                            {{ network.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    
+                    <select name="date" class="flex-shrink-0 px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:ring-2 focus:ring-purple-500">
+                        <option value="">All Time</option>
+                        <option value="today" {% if selected_date == 'today' %}selected{% endif %}>Today</option>
+                        <option value="week" {% if selected_date == 'week' %}selected{% endif %}>This Week</option>
+                        <option value="month" {% if selected_date == 'month' %}selected{% endif %}>This Month</option>
+                        <option value="custom" {% if selected_date == 'custom' %}selected{% endif %}>Custom Range</option>
+                    </select>
+                    
+                    <button type="button" @click="showAdvanced = !showAdvanced"
+                            class="flex-shrink-0 px-3 py-2 bg-white/5 border border-white/20 rounded-xl text-white/60 text-sm hover:bg-white/10 transition">
+                        <svg class="w-5 h-5 transition-transform" :class="{'rotate-180': showAdvanced}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Advanced Filters (Date Range) -->
+                <div x-show="showAdvanced" x-collapse class="space-y-3 pt-2 border-t border-white/10">
+                    <p class="text-white/60 text-xs font-medium uppercase tracking-wider">Custom Date Range</p>
+                    <div class="flex gap-2">
+                        <div class="flex-1">
+                            <label class="text-white/50 text-xs mb-1 block">From</label>
+                            <input type="date" name="date_from" value="{{ date_from }}"
+                                   class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-white/50 text-xs mb-1 block">To</label>
+                            <input type="date" name="date_to" value="{{ date_to }}"
+                                   class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:ring-2 focus:ring-purple-500">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Search Button -->
+                <button type="submit" 
+                        class="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-medium transition flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    Search Transactions
+                </button>
+            </form>
+        </div>
+        
+        <!-- Transactions List (Matching Dashboard Design) -->
+        <div class="bg-white/5 backdrop-blur rounded-2xl border border-white/10 overflow-hidden">
+            <div class="flex items-center justify-between p-4 border-b border-white/10">
+                <h3 class="font-semibold text-white">Results</h3>
+                <span class="text-white/50 text-sm">{{ stats.total_count|default:0 }} found</span>
+            </div>
+            
+            {% if transactions %}
+            <div class="divide-y divide-white/5">
+                {% for tx in transactions %}
+                <div class="transaction-row" 
+                     x-data="{ expanded: false }"
+                     data-transaction="{{ tx.id }}">
+                    <!-- Clickable Row -->
+                    <div class="flex items-center gap-4 p-4 hover:bg-white/5 transition cursor-pointer"
+                         @click="expanded = !expanded">
+                        <!-- Type Icon -->
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center {% if tx.transaction_type == 'DEPOSIT' %}bg-green-500/20{% else %}bg-orange-500/20{% endif %}">
+                            {% if tx.transaction_type == 'DEPOSIT' %}
+                            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                            </svg>
+                            {% else %}
+                            <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                            </svg>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Details -->
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-white truncate">
+                                {% if tx.transaction_type == 'DEPOSIT' %}Cash In{% else %}Cash Out{% endif %}
+                                <span class="text-white/40 font-normal">• {{ tx.network.code }}</span>
+                            </p>
+                            <p class="text-white/50 text-sm">
+                                {{ tx.timestamp|date:"d M Y, H:i" }}
+                                {% if tx.customer_phone %} • {{ tx.customer_phone }}{% endif %}
+                            </p>
+                        </div>
+                        
+                        <!-- Amount & Profit -->
+                        <div class="text-right">
+                            <p class="font-semibold text-white">{{ tx.amount|floatformat:0 }} CFA</p>
+                            <p class="text-green-400 text-sm">+{{ tx.profit|floatformat:0 }} profit</p>
+                        </div>
+                        
+                        <!-- Expand Indicator -->
+                        <svg class="w-4 h-4 text-white/30 transition-transform" 
+                             :class="{'rotate-180': expanded}"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                    
+                    <!-- Action Menu (slides down) -->
+                    <div x-show="expanded" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 -translate-y-2"
+                         class="px-4 pb-4">
+                        <div class="flex items-center gap-2 p-2 bg-slate-700/80 rounded-xl">
+                            <!-- Delete (left) -->
+                            <a href="{% url 'core:delete_transaction' pk=tx.id %}"
+                               class="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                <span class="text-sm font-medium">Delete</span>
+                            </a>
+                            <!-- Share (middle) -->
+                            <button type="button"
+                                    onclick="shareTransaction('{% if tx.transaction_type == 'DEPOSIT' %}Cash In{% else %}Cash Out{% endif %}', '{{ tx.network.code }}', '{{ tx.amount|floatformat:0 }}', '{{ tx.profit|floatformat:0 }}', '{{ tx.timestamp|date:'M d, Y H:i' }}')"
+                                    class="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                </svg>
+                                <span class="text-sm font-medium">Share</span>
+                            </button>
+                            <!-- Edit (right) -->
+                            <a href="{% url 'core:edit_transaction' pk=tx.id %}"
+                               class="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                <span class="text-sm font-medium">Edit</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="px-4 py-3 border-t border-white/10 flex justify-center gap-2">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_network %}&network={{ selected_network }}{% endif %}{% if selected_date %}&date={{ selected_date }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" 
+                   class="px-4 py-2 bg-white/10 text-white/70 rounded-xl hover:bg-white/20 text-sm font-medium transition">
+                    ← Previous
+                </a>
+                {% endif %}
+                <span class="px-4 py-2 text-white/50 text-sm">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_network %}&network={{ selected_network }}{% endif %}{% if selected_date %}&date={{ selected_date }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" 
+                   class="px-4 py-2 bg-white/10 text-white/70 rounded-xl hover:bg-white/20 text-sm font-medium transition">
+                    Next →
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <div class="p-8 text-center">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                </div>
+                <p class="text-white/50">No transactions found</p>
+                <p class="text-white/30 text-sm mt-1">Try adjusting your filters or add a new transaction</p>
+                <a href="{% url 'core:add_transaction' %}" 
+                   class="mt-4 inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-white font-medium rounded-xl hover:bg-primary-600 transition">
+                    Add Transaction
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+    </div>
+</div>
+
+<script>
+// Share transaction using Web Share API
+async function shareTransaction(type, network, amount, profit, timestamp) {
+    const shareText = `📱 Floatly Transaction Receipt
+
+🏪 ${type} - ${network}
+💵 Amount: ${amount} CFA
+💰 Profit: ${profit} CFA
+📅 ${timestamp}
+
+Powered by Floatly - Digital Logbook for Mobile Money Agents`;
+
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Transaction Receipt',
+                text: shareText
+            });
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                fallbackShare(shareText);
+            }
+        }
+    } else {
+        fallbackShare(shareText);
+    }
+}
+
+function fallbackShare(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Copied to clipboard!');
+    }).catch(() => {
+        alert('Could not copy text');
+    });
+}
+</script>
+{% endblock %}

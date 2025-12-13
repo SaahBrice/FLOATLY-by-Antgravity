@@ -58,6 +58,9 @@ urlpatterns = [
     # TRANSACTIONS
     # =========================================================================
     
+    # Transaction list/search
+    path('transactions/', transaction_views.TransactionListView.as_view(), name='transactions'),
+    
     # Add transaction
     path('transactions/add/', transaction_views.AddTransactionView.as_view(), name='add_transaction'),
     path('transactions/add/<slug:kiosk_slug>/', transaction_views.AddTransactionView.as_view(), name='add_transaction_kiosk'),
