@@ -1,0 +1,79 @@
+{% extends 'learn/chapter_base.html' %}
+
+{% block chapter_content %}
+<p class="lead text-xl text-white/80 mb-8">
+    Scammers target mobile money agents because they handle cash. Learn their tricks to protect your business and your customers.
+</p>
+
+<h2>🎭 Common Scam Types</h2>
+
+<h3>1. The Fake SMS Scam</h3>
+<p>Scammers send fake confirmation SMS messages that look real.</p>
+<div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl my-4">
+    <p class="text-red-400 font-semibold mb-2">⚠️ Red Flags:</p>
+    <ul class="mb-0">
+        <li>SMS from regular number, not shortcode (like 8181 or 656)</li>
+        <li>Spelling errors or weird formatting</li>
+        <li>Customer rushing you before you check your balance</li>
+    </ul>
+</div>
+<p><strong>Protection:</strong> ALWAYS check your actual balance in the app before giving cash. Never trust SMS alone.</p>
+
+<h3>2. The Reversal Scam</h3>
+<p>Customer sends money, you give cash, then they reverse the transaction.</p>
+<div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl my-4">
+    <p class="text-red-400 font-semibold mb-2">⚠️ Red Flags:</p>
+    <ul class="mb-0">
+        <li>Unknown customer with large transaction</li>
+        <li>Customer in a hurry to leave</li>
+        <li>Customer making calls during transaction</li>
+    </ul>
+</div>
+<p><strong>Protection:</strong> Wait 2-3 minutes before completing cash-out for large amounts. Verify the transaction settled.</p>
+
+<h3>3. The "Network Staff" Call</h3>
+<p>Someone calls pretending to be MTN/Orange staff asking for your PIN.</p>
+<div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl my-4">
+    <p class="text-red-400 font-semibold mb-2">⚠️ Remember:</p>
+    <p class="mb-0">Network staff will <strong>NEVER</strong> ask for your PIN. Ever. No exceptions.</p>
+</div>
+
+<h3>4. The Overpayment Scam</h3>
+<p>Customer "accidentally" sends too much, asks for refund, then reverses original transaction.</p>
+<p><strong>Protection:</strong> Never refund difference. Tell customer to contact network support.</p>
+
+<h3>5. The Split Transaction Scam</h3>
+<p>Customer asks to split one transaction into many small ones to confuse you.</p>
+<p><strong>Protection:</strong> Count carefully. Use Floatly to track every single transaction.</p>
+
+<h2>🛡️ Golden Rules of Protection</h2>
+
+<ol>
+    <li><strong>Verify, verify, verify</strong> - Check your balance before AND after every transaction</li>
+    <li><strong>Never rush</strong> - Legitimate customers can wait 30 seconds</li>
+    <li><strong>Trust your instincts</strong> - If something feels wrong, it probably is</li>
+    <li><strong>Record immediately</strong> - Document everything in real-time</li>
+    <li><strong>Know your customers</strong> - Be extra careful with strangers on large amounts</li>
+</ol>
+
+<h2>📞 What to Do If You're Scammed</h2>
+
+<ol>
+    <li><strong>Act immediately</strong> - Time is critical</li>
+    <li><strong>Call network support</strong> - Report the fraud within minutes</li>
+    <li><strong>File police report</strong> - Get documentation</li>
+    <li><strong>Gather evidence</strong> - Screenshot messages, note times, save records</li>
+    <li><strong>Report to community</strong> - Warn other agents about the scammer's description/method</li>
+</ol>
+
+<div class="p-6 bg-yellow-500/10 border border-yellow-500/20 rounded-xl mt-8">
+    <h3 class="text-yellow-400 mt-0">⚡ Quick Check Before Cash-Out</h3>
+    <ol class="mb-0">
+        <li>Did I receive official SMS from shortcode?</li>
+        <li>Did my balance actually increase?</li>
+        <li>Does the amount match exactly?</li>
+        <li>Do I know this customer or have their ID?</li>
+    </ol>
+    <p class="mb-0 mt-4">If any answer is NO → Don't proceed!</p>
+</div>
+{% endblock %}

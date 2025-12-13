@@ -10,7 +10,8 @@
          showFabMenu: false,
          feedbackModalOpen: false,
          transactionDetailsOpen: false,
-         transactionDetails: {}
+         transactionDetails: {},
+         learnModalOpen: false
      }"
      @show-transaction-details.window="transactionDetails = $event.detail; transactionDetailsOpen = true">
     
@@ -268,6 +269,17 @@
                     </a>
                 </div>
             </nav>
+            
+            <!-- Learn Button -->
+            <div class="px-4 pb-2">
+                <button @click="learnModalOpen = true; sidebarOpen = false"
+                        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-primary-600/20 to-blue-600/20 border border-primary-500/30 text-primary-300 hover:from-primary-600/30 hover:to-blue-600/30 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    <span class="text-sm font-medium">Learn & Tips</span>
+                </button>
+            </div>
             
             <!-- Feedback Button -->
             <div class="px-4 pb-2">
@@ -543,6 +555,131 @@
                         </div>
                     </template>
                 </form>
+            </div>
+        </div>
+    </template>
+    
+    <!-- Learn Modal -->
+    <template x-if="learnModalOpen">
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+             @click.self="learnModalOpen = false"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0">
+            
+            <div class="bg-slate-800 rounded-2xl border border-white/10 max-w-md w-full shadow-2xl overflow-hidden max-h-[85vh] flex flex-col"
+                 @click.stop>
+                <!-- Header -->
+                <div class="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-primary-600 to-blue-600 flex-shrink-0">
+                    <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                        Agent Learning Center
+                    </h3>
+                    <button @click="learnModalOpen = false" 
+                            class="p-1 text-white/70 hover:text-white transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Content -->
+                <div class="overflow-y-auto flex-1 p-4 space-y-3">
+                    <!-- Chapter 1: Safety Tips -->
+                    <a href="{% url 'core:learn_chapter' slug='safety-tips' %}" 
+                       class="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition group" target="_blank">
+                        <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center text-lg flex-shrink-0">🛡️</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white font-medium text-sm group-hover:text-green-400 transition">Safety Tips</p>
+                            <p class="text-white/50 text-xs truncate">Essential security practices</p>
+                        </div>
+                        <svg class="w-4 h-4 text-white/30 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                    </a>
+                    
+                    <!-- Chapter 2: Avoid Scammers -->
+                    <a href="{% url 'core:learn_chapter' slug='avoid-scammers' %}" 
+                       class="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition group" target="_blank">
+                        <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center text-lg flex-shrink-0">⚠️</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white font-medium text-sm group-hover:text-red-400 transition">Avoid Scammers</p>
+                            <p class="text-white/50 text-xs truncate">Recognize and prevent fraud</p>
+                        </div>
+                        <svg class="w-4 h-4 text-white/30 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                    </a>
+                    
+                    <!-- Chapter 3: Best Practices -->
+                    <a href="{% url 'core:learn_chapter' slug='best-practices' %}" 
+                       class="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition group" target="_blank">
+                        <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-lg flex-shrink-0">✨</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white font-medium text-sm group-hover:text-blue-400 transition">Best Practices</p>
+                            <p class="text-white/50 text-xs truncate">Run your kiosk efficiently</p>
+                        </div>
+                        <svg class="w-4 h-4 text-white/30 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                    </a>
+                    
+                    <!-- Chapter 4: Register as Agent -->
+                    <a href="{% url 'core:learn_chapter' slug='register-as-agent' %}" 
+                       class="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition group" target="_blank">
+                        <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center text-lg flex-shrink-0">📋</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white font-medium text-sm group-hover:text-purple-400 transition">Register as Agent</p>
+                            <p class="text-white/50 text-xs truncate">Step-by-step registration guide</p>
+                        </div>
+                        <svg class="w-4 h-4 text-white/30 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                    </a>
+                    
+                    <!-- Chapter 5: Why Go Pro -->
+                    <a href="{% url 'core:learn_chapter' slug='why-go-pro' %}" 
+                       class="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition group" target="_blank">
+                        <div class="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center text-lg flex-shrink-0">🚀</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white font-medium text-sm group-hover:text-orange-400 transition">Why Go Pro</p>
+                            <p class="text-white/50 text-xs truncate">Benefits of professionalism</p>
+                        </div>
+                        <svg class="w-4 h-4 text-white/30 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                    </a>
+                    
+                    <!-- Chapter 6: Record Keeping -->
+                    <a href="{% url 'core:learn_chapter' slug='record-keeping' %}" 
+                       class="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition group" target="_blank">
+                        <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center text-lg flex-shrink-0">📊</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white font-medium text-sm group-hover:text-cyan-400 transition">Record Keeping</p>
+                            <p class="text-white/50 text-xs truncate">Track transactions accurately</p>
+                        </div>
+                        <svg class="w-4 h-4 text-white/30 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                    </a>
+                </div>
+                
+                <!-- Footer -->
+                <div class="p-4 border-t border-white/10 flex-shrink-0">
+                    <a href="{% url 'core:learn_index' %}" 
+                       class="flex items-center justify-center gap-2 py-3 px-4 bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 rounded-xl font-medium transition"
+                       target="_blank">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                        View All Chapters
+                    </a>
+                </div>
             </div>
         </div>
     </template>

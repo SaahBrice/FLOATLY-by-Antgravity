@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} - Floatly Learn{% endblock %}
+
+{% block extra_head %}
+<!-- SEO Meta Tags -->
+<meta name="description" content="{{ page_description }}">
+<meta name="keywords" content="mobile money agent, {{ chapter.short_title }}, MoMo, Orange Money, MTN, Cameroon">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph -->
+<meta property="og:title" content="{{ page_title }}">
+<meta property="og:description" content="{{ page_description }}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Floatly">
+
+<!-- Schema.org Article -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "{{ chapter.title }}",
+    "description": "{{ chapter.summary }}",
+    "author": {
+        "@type": "Organization",
+        "name": "Floatly"
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "Floatly"
+    }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    
+    <!-- Navigation Header -->
+    <header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-xl border-b border-white/10">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="{% url 'core:learn_index' %}" class="flex items-center gap-2 text-white/70 hover:text-white transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                <span class="hidden sm:inline">All Chapters</span>
+            </a>
+            
+            <span class="text-{{ chapter.color }}-400 text-sm font-medium">Chapter {{ chapter.order }}</span>
+            
+            <a href="{% url 'core:register' %}" class="text-primary-400 hover:text-primary-300 text-sm font-medium">
+                Try Floatly →
+            </a>
+        </div>
+    </header>
+    
+    <!-- Article Content -->
+    <article class="max-w-3xl mx-auto px-4 py-12">
+        <!-- Chapter Header -->
+        <header class="text-center mb-12">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-{{ chapter.color }}-500/20 mb-6 text-3xl">
+                {{ chapter.icon }}
+            </div>
+            <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">{{ chapter.title }}</h1>
+            <p class="text-xl text-white/60">{{ chapter.summary }}</p>
+        </header>
+        
+        <!-- Main Content - Injected by child templates -->
+        <div class="prose prose-invert prose-lg max-w-none 
+                    prose-headings:text-white prose-headings:font-bold
+                    prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4
+                    prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+                    prose-p:text-white/70 prose-p:leading-relaxed
+                    prose-li:text-white/70
+                    prose-strong:text-white prose-strong:font-semibold
+                    prose-a:text-primary-400 prose-a:no-underline hover:prose-a:underline">
+            {% block chapter_content %}{% endblock %}
+        </div>
+        
+        <!-- Chapter Navigation -->
+        <nav class="mt-16 pt-8 border-t border-white/10 flex items-center justify-between gap-4">
+            {% if prev_chapter %}
+            <a href="{% url 'core:learn_chapter' slug=prev_chapter.slug %}" 
+               class="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition group flex-1 max-w-xs">
+                <svg class="w-5 h-5 text-white/50 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                <div class="text-left">
+                    <span class="text-white/50 text-xs">Previous</span>
+                    <p class="text-white font-medium text-sm">{{ prev_chapter.short_title }}</p>
+                </div>
+            </a>
+            {% else %}
+            <div></div>
+            {% endif %}
+            
+            {% if next_chapter %}
+            <a href="{% url 'core:learn_chapter' slug=next_chapter.slug %}" 
+               class="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition group flex-1 max-w-xs justify-end">
+                <div class="text-right">
+                    <span class="text-white/50 text-xs">Next</span>
+                    <p class="text-white font-medium text-sm">{{ next_chapter.short_title }}</p>
+                </div>
+                <svg class="w-5 h-5 text-white/50 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+            {% endif %}
+        </nav>
+    </article>
+    
+    <!-- CTA Section -->
+    <section class="max-w-3xl mx-auto px-4 pb-16">
+        <div class="p-8 rounded-2xl bg-gradient-to-r from-primary-600/20 to-purple-600/20 border border-primary-500/20 text-center">
+            <h3 class="text-xl font-bold text-white mb-2">Put this knowledge into practice!</h3>
+            <p class="text-white/60 mb-6">Track your transactions and grow your business with Floatly.</p>
+            <a href="{% url 'core:register' %}" 
+               class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-500 to-purple-600 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-purple-700 transition">
+                Start Free
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </a>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -12,6 +12,7 @@ from . import notification_views
 from . import team_views
 from . import fraud_views
 from . import feedback_views
+from . import learn_views
 
 app_name = 'core'
 
@@ -134,6 +135,14 @@ urlpatterns = [
     # =========================================================================
     
     path('feedback/', feedback_views.FeedbackSubmitView.as_view(), name='feedback'),
+    
+    # =========================================================================
+    # LEARN - Educational Content (Public, SEO-friendly)
+    # =========================================================================
+    
+    path('learn/', learn_views.LearnIndexView.as_view(), name='learn_index'),
+    path('learn/<slug:slug>/', learn_views.ChapterDetailView.as_view(), name='learn_chapter'),
+    path('learn-modal/', learn_views.LearnModalDataView.as_view(), name='learn_modal'),
     
     # Include allauth URLs for email confirmation and social auth
     path('accounts/', include('allauth.urls')),
