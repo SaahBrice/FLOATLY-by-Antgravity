@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You're Invited to Join {{ kiosk.name }}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8fafc;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 500px;">
+                    
+                    <!-- Logo -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 24px;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td style="background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%); width: 48px; height: 48px; border-radius: 12px;" align="center">
+                                        <span style="font-size: 28px;">💰</span>
+                                    </td>
+                                    <td style="padding-left: 12px;">
+                                        <span style="font-size: 24px; font-weight: 800; color: #1e293b;">Floatly</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Card -->
+                    <tr>
+                        <td>
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                                
+                                <!-- Header -->
+                                <tr>
+                                    <td style="background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%); padding: 32px; text-align: center;">
+                                        <span style="font-size: 48px;">🎉</span>
+                                        <h1 style="color: #ffffff; margin: 16px 0 8px; font-size: 24px;">You're Invited!</h1>
+                                        <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 16px;">
+                                            {{ invited_by.display_name }} wants you on their team
+                                        </p>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Content -->
+                                <tr>
+                                    <td style="padding: 32px;">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                            <tr>
+                                                <td style="padding: 16px; background-color: #f8fafc; border-radius: 12px; margin-bottom: 24px;">
+                                                    <p style="margin: 0 0 4px; color: #64748b; font-size: 14px;">Kiosk</p>
+                                                    <p style="margin: 0; color: #1e293b; font-size: 18px; font-weight: 600;">{{ kiosk.name }}</p>
+                                                    {% if kiosk.location %}
+                                                    <p style="margin: 8px 0 0; color: #64748b; font-size: 14px;">📍 {{ kiosk.location }}</p>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding-top: 24px;">
+                                                    <p style="margin: 0 0 4px; color: #64748b; font-size: 14px;">Your Role</p>
+                                                    <p style="margin: 0; color: #1e293b; font-size: 16px; font-weight: 500;">
+                                                        {{ invitation.get_role_display }}
+                                                        {% if invitation.role == 'ADMIN' %}
+                                                        - Full access to settings and reports
+                                                        {% else %}
+                                                        - Add transactions and view personal stats
+                                                        {% endif %}
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                            {% if invitation.message %}
+                                            <tr>
+                                                <td style="padding-top: 24px;">
+                                                    <p style="margin: 0 0 8px; color: #64748b; font-size: 14px;">Message from {{ invited_by.display_name }}</p>
+                                                    <p style="margin: 0; padding: 16px; background-color: #fef3c7; border-radius: 8px; color: #78350f; font-style: italic;">
+                                                        "{{ invitation.message }}"
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                        </table>
+                                    </td>
+                                </tr>
+                                
+                                <!-- CTA -->
+                                <tr>
+                                    <td style="padding: 0 32px 32px;">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                            <tr>
+                                                <td align="center">
+                                                    <a href="{{ invite_url }}" 
+                                                       style="display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%); color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; padding: 16px 32px; border-radius: 12px;">
+                                                        Accept Invitation →
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td align="center" style="padding-top: 16px;">
+                                                    <p style="margin: 0; color: #94a3b8; font-size: 13px;">
+                                                        Expires {{ invitation.expires_at|date:"F d, Y" }}
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- About Floatly -->
+                    <tr>
+                        <td style="padding: 32px 0;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f1f5f9; border-radius: 12px; padding: 24px;">
+                                <tr>
+                                    <td style="padding: 24px;">
+                                        <h3 style="margin: 0 0 12px; color: #1e293b; font-size: 16px;">What is Floatly?</h3>
+                                        <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.6;">
+                                            Floatly is a modern logbook for mobile money agents. Track deposits, withdrawals, and commissions effortlessly. Get real-time profit insights and protect yourself from fraud.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 24px;">
+                            <p style="margin: 0; color: #94a3b8; font-size: 12px;">
+                                © 2024 Floatly. Made with ❤️ in Cameroon.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

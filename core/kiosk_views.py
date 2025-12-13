@@ -18,6 +18,7 @@ from django.db.models import Sum, Count
 from django import forms
 
 from .models import Kiosk, KioskMember, Transaction
+from .notification_service import notify_kiosk_change
 
 # Logger for kiosk operations
 logger = logging.getLogger('core')
@@ -91,9 +92,20 @@ class EditKioskView(LoginRequiredMixin, FormView):
             f"location={kiosk.location}"
         )
         
+        # Notify all kiosk members about the change
+        self._send_kiosk_notifications(kiosk, 'edited')
+        
         messages.success(self.request, f'✅ Kiosk "{kiosk.name}" updated!')
         
         return redirect('core:dashboard')
+    
+    def _send_kiosk_notifications(self, kiosk, action):
+        """Notify kiosk members about changes."""
+        for member in KioskMember.objects.filter(kiosk=kiosk).select_related('user'):
+            try:
+                notify_kiosk_change(member.user, kiosk, action, actor=self.request.user)
+            except Exception as e:
+                logger.error(f"Failed to notify user {member.user.email} about kiosk change: {e}")
 
 
 class DeleteKioskView(LoginRequiredMixin, View):
@@ -139,6 +151,9 @@ class DeleteKioskView(LoginRequiredMixin, View):
             )
             raise Http404("Only the kiosk owner can delete")
         
+        # Notify all kiosk members before deletion
+        self._send_delete_notifications(kiosk, request.user)
+        
         # Store details for logging
         kiosk_details = {
             'name': kiosk.name,
@@ -156,3 +171,11 @@ class DeleteKioskView(LoginRequiredMixin, View):
         messages.success(request, f'🗑️ Kiosk "{kiosk_name}" deleted successfully.')
         
         return redirect('core:dashboard')
+    
+    def _send_delete_notifications(self, kiosk, actor):
+        """Notify kiosk members about deletion."""
+        for member in KioskMember.objects.filter(kiosk=kiosk).select_related('user'):
+            try:
+                notify_kiosk_change(member.user, kiosk, 'deleted', actor=actor)
+            except Exception as e:
+                logger.error(f"Failed to notify user {member.user.email} about kiosk deletion: {e}")

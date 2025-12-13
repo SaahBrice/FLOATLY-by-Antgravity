@@ -1,0 +1,51 @@
+{% extends 'emails/notification_base.html' %}
+
+{% block badge %}
+<table role="presentation" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+        <td style="background-color: #ede9fe; color: #7c3aed; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 20px; text-transform: uppercase;">
+            🎉 INVITATION
+        </td>
+    </tr>
+</table>
+{% endblock %}
+
+{% block content %}
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 16px 0; background-color: #faf5ff; border-radius: 12px; border-left: 4px solid #8b5cf6;">
+    <tr>
+        <td style="padding: 20px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                    <td valign="top" style="padding-right: 12px;">
+                        <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%); border-radius: 12px; display: inline-block; text-align: center; line-height: 48px;">
+                            <span style="font-size: 24px;">🏪</span>
+                        </div>
+                    </td>
+                    <td valign="top">
+                        <p style="margin: 0 0 4px; font-size: 16px; font-weight: 600; color: #7c3aed;">
+                            You're invited!
+                        </p>
+                        <p style="margin: 0; font-size: 14px; color: #6b21a8; line-height: 1.5;">
+                            Accept this invitation to start managing transactions and tracking your earnings at this kiosk.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<p style="margin: 16px 0; font-size: 14px; color: #475569; line-height: 1.6;">
+    <strong>As a team member, you'll be able to:</strong>
+</p>
+<ul style="margin: 0 0 16px; padding-left: 20px; color: #475569; line-height: 1.8;">
+    <li>Log deposits and withdrawals</li>
+    <li>Track daily transaction activity</li>
+    <li>View your personal contribution</li>
+    <li>Get real-time balance updates</li>
+</ul>
+
+<p style="margin: 16px 0 0; font-size: 13px; color: #94a3b8;">
+    Click the button above to accept and get started!
+</p>
+{% endblock %}

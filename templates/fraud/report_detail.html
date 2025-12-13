@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-2xl mx-auto px-4">
+        
+        <!-- Back Link -->
+        <a href="{% url 'core:blacklist' %}" 
+           class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6">
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Blacklist
+        </a>
+        
+        <!-- Report Card -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            
+            <!-- Header -->
+            <div class="px-6 py-6 {% if report.is_verified %}bg-red-50 border-b border-red-100{% else %}bg-amber-50 border-b border-amber-100{% endif %}">
+                <div class="flex items-center">
+                    <div class="w-14 h-14 rounded-xl {% if report.is_verified %}bg-red-100{% else %}bg-amber-100{% endif %} flex items-center justify-center">
+                        {% if report.is_verified %}
+                        <span class="text-3xl">⚠️</span>
+                        {% else %}
+                        <span class="text-3xl">🔔</span>
+                        {% endif %}
+                    </div>
+                    <div class="ml-4">
+                        <h1 class="text-2xl font-bold {% if report.is_verified %}text-red-900{% else %}text-amber-900{% endif %}">
+                            {{ report.phone_number }}
+                        </h1>
+                        {% if report.is_verified %}
+                        <span class="inline-flex items-center px-3 py-1 bg-red-200 text-red-800 text-sm font-bold rounded-full">
+                            ⚡ VERIFIED THREAT
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Report Details -->
+            <div class="p-6 space-y-6">
+                
+                <!-- Stats -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <p class="text-2xl font-bold text-gray-900">{{ total_reports }}</p>
+                        <p class="text-sm text-gray-500">Total Reports</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <p class="text-2xl font-bold text-gray-900">{{ report.get_report_type_display }}</p>
+                        <p class="text-sm text-gray-500">Report Type</p>
+                    </div>
+                </div>
+                
+                <!-- Scammer Name -->
+                {% if report.scammer_name %}
+                <div>
+                    <p class="text-sm font-medium text-gray-500 mb-1">Known As</p>
+                    <p class="text-lg text-gray-900">{{ report.scammer_name }}</p>
+                </div>
+                {% endif %}
+                
+                <!-- Description -->
+                <div>
+                    <p class="text-sm font-medium text-gray-500 mb-2">What Happened</p>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <p class="text-gray-700 whitespace-pre-wrap">{{ report.description }}</p>
+                    </div>
+                </div>
+                
+                <!-- Proof Image -->
+                {% if report.proof_image %}
+                <div>
+                    <p class="text-sm font-medium text-gray-500 mb-2">Proof Screenshot</p>
+                    <a href="{{ report.proof_image.url }}" target="_blank" class="block">
+                        <img src="{{ report.proof_image.url }}" alt="Proof" 
+                             class="rounded-xl max-h-96 object-contain bg-gray-100 border">
+                    </a>
+                </div>
+                {% endif %}
+                
+                <!-- Reporter Info -->
+                <div class="pt-4 border-t">
+                    <p class="text-sm text-gray-500">
+                        Reported {{ report.created_at|timesince }} ago
+                        {% if report.reporter_location %}
+                        • 📍 {{ report.reporter_location }}
+                        {% endif %}
+                    </p>
+                </div>
+                
+            </div>
+        </div>
+        
+        <!-- Related Reports -->
+        {% if related_reports %}
+        <div class="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b">
+                <h2 class="font-semibold text-gray-900">Other Reports for This Number</h2>
+            </div>
+            <div class="divide-y">
+                {% for related in related_reports %}
+                <div class="p-4">
+                    <p class="text-sm text-gray-500">{{ related.created_at|date:"M d, Y" }} • {{ related.get_report_type_display }}</p>
+                    <p class="text-gray-700 mt-1">{{ related.description|truncatechars:100 }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Report Same Number -->
+        <div class="mt-6 text-center">
+            <p class="text-gray-500 text-sm">Had the same experience?</p>
+            <a href="{% url 'core:fraud_report' %}?phone={{ report.phone_number }}" 
+               class="text-red-600 font-medium hover:text-red-700">
+                Add your report →
+            </a>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

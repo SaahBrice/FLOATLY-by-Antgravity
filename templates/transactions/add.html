@@ -201,7 +201,13 @@
                                value="{{ form.customer_phone.value|default:'' }}"
                                placeholder="+237..."
                                class="form-input"
-                               inputmode="tel">
+                               inputmode="tel"
+                               hx-get="{% url 'core:check_phone' %}"
+                               hx-trigger="keyup changed delay:500ms"
+                               hx-target="#phone-warning"
+                               hx-vals='{"phone": this.value}'>
+                        <!-- Blacklist Warning Container -->
+                        <div id="phone-warning" class="mt-2"></div>
                     </div>
                     
                     <!-- Transaction Reference -->

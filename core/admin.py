@@ -16,7 +16,9 @@ from django.db.models import Count, Sum
 
 from .models import (
     User, Kiosk, KioskMember, Network, 
-    CommissionRate, Transaction, Notification
+    CommissionRate, Transaction, Notification,
+    PushSubscription, NotificationPreference,
+    KioskInvitation, FraudReport
 )
 
 
@@ -397,3 +399,115 @@ class NotificationAdmin(admin.ModelAdmin):
     def mark_as_unread(self, request, queryset):
         count = queryset.update(is_read=False, read_at=None)
         self.message_user(request, f'{count} notifications marked as unread.')
+
+
+# =============================================================================
+# PUSH SUBSCRIPTION ADMIN
+# =============================================================================
+
+@admin.register(PushSubscription)
+class PushSubscriptionAdmin(admin.ModelAdmin):
+    """Admin configuration for PushSubscription model."""
+    
+    list_display = ['user_display', 'is_active', 'last_used_at', 'created_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['user__email', 'endpoint']
+    autocomplete_fields = ['user']
+    readonly_fields = ['endpoint', 'p256dh_key', 'auth_key', 'user_agent', 'created_at', 'last_used_at']
+    
+    def user_display(self, obj):
+        return obj.user.display_name
+    user_display.short_description = 'User'
+
+
+# =============================================================================
+# NOTIFICATION PREFERENCE ADMIN
+# =============================================================================
+
+@admin.register(NotificationPreference)
+class NotificationPreferenceAdmin(admin.ModelAdmin):
+    """Admin configuration for NotificationPreference model."""
+    
+    list_display = [
+        'user_display', 'push_enabled', 'email_enabled', 
+        'daily_summary_enabled', 'summary_time', 'updated_at'
+    ]
+    list_filter = ['push_enabled', 'email_enabled', 'daily_summary_enabled']
+    search_fields = ['user__email']
+    autocomplete_fields = ['user']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    fieldsets = (
+        ('User', {'fields': ('user',)}),
+        ('Channel Preferences', {'fields': ('push_enabled', 'email_enabled')}),
+        ('Notification Types', {'fields': (
+            'invites_enabled', 'fraud_alerts_enabled', 
+            'system_messages_enabled', 'transaction_alerts_enabled'
+        )}),
+        ('Daily Summary', {'fields': ('daily_summary_enabled', 'summary_time')}),
+        ('Timestamps', {'fields': ('created_at', 'updated_at')}),
+    )
+    
+    def user_display(self, obj):
+        return obj.user.display_name
+    user_display.short_description = 'User'
+
+
+# =============================================================================
+# KIOSK INVITATION ADMIN
+# =============================================================================
+
+@admin.register(KioskInvitation)
+class KioskInvitationAdmin(admin.ModelAdmin):
+    """Admin interface for kiosk invitations."""
+    
+    list_display = ['email', 'kiosk', 'role', 'status', 'invited_by', 'created_at', 'expires_at']
+    list_filter = ['status', 'role', 'created_at']
+    search_fields = ['email', 'kiosk__name', 'invited_by__email']
+    date_hierarchy = 'created_at'
+    readonly_fields = ['token', 'created_at', 'accepted_at']
+    
+    fieldsets = (
+        ('Invitation', {'fields': ('kiosk', 'email', 'role', 'status')}),
+        ('Inviter', {'fields': ('invited_by', 'message')}),
+        ('Token & Dates', {'fields': ('token', 'created_at', 'expires_at', 'accepted_at')}),
+    )
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('kiosk', 'invited_by')
+
+
+# =============================================================================
+# FRAUD REPORT ADMIN
+# =============================================================================
+
+@admin.register(FraudReport)
+class FraudReportAdmin(admin.ModelAdmin):
+    """Admin interface for fraud reports."""
+    
+    list_display = ['phone_number', 'scammer_name', 'report_type', 'is_verified', 'reporter', 'created_at']
+    list_filter = ['report_type', 'is_verified', 'created_at']
+    search_fields = ['phone_number', 'scammer_name', 'description']
+    date_hierarchy = 'created_at'
+    readonly_fields = ['created_at', 'is_verified']
+    
+    fieldsets = (
+        ('Scammer Info', {'fields': ('phone_number', 'scammer_name', 'report_type')}),
+        ('Report', {'fields': ('description', 'proof_image')}),
+        ('Reporter', {'fields': ('reporter', 'reporter_kiosk', 'reporter_location')}),
+        ('Status', {'fields': ('is_verified', 'created_at')}),
+    )
+    
+    actions = ['mark_as_verified', 'mark_as_unverified']
+    
+    @admin.action(description='Mark selected as verified threat')
+    def mark_as_verified(self, request, queryset):
+        queryset.update(is_verified=True)
+    
+    @admin.action(description='Mark selected as unverified')
+    def mark_as_unverified(self, request, queryset):
+        queryset.update(is_verified=False)
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('reporter', 'reporter_kiosk')
+

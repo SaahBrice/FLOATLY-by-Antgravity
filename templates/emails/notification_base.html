@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ notification.title }} | Floatly</title>
+    <style>
+        /* Reset */
+        body, table, td, p, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+        body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #f1f5f9; }
+        
+        /* Typography */
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+        
+        /* Mobile Styles */
+        @media only screen and (max-width: 600px) {
+            .container { width: 100% !important; padding: 0 16px !important; }
+            .content { padding: 24px !important; }
+            .button { width: 100% !important; padding: 16px !important; }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f1f5f9;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f1f5f9;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <!-- Container -->
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="container" style="max-width: 560px;">
+                    
+                    <!-- Logo Header -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 24px;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td style="background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%); width: 44px; height: 44px; border-radius: 12px;" align="center">
+                                        <span style="font-size: 24px;">💰</span>
+                                    </td>
+                                    <td style="padding-left: 12px;">
+                                        <span style="font-size: 24px; font-weight: 800; color: #1e293b;">Floatly</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Card -->
+                    <tr>
+                        <td>
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #ffffff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                <tr>
+                                    <td class="content" style="padding: 32px;">
+                                        <!-- Type Badge -->
+                                        {% block badge %}
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                            <tr>
+                                                <td style="background-color: #f3f4f6; color: #6b7280; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 20px; text-transform: uppercase;">
+                                                    {{ notification.get_notification_type_display }}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        {% endblock %}
+                                        
+                                        <!-- Title -->
+                                        <h1 style="margin: 24px 0 16px; font-size: 24px; font-weight: 700; color: #1e293b; line-height: 1.3;">
+                                            {{ notification.title }}
+                                        </h1>
+                                        
+                                        <!-- Message -->
+                                        <p style="margin: 0 0 24px; font-size: 16px; color: #475569; line-height: 1.6;">
+                                            {{ notification.message }}
+                                        </p>
+                                        
+                                        {% block content %}{% endblock %}
+                                        
+                                        <!-- CTA Button -->
+                                        {% if notification.action_url %}
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 24px 0;">
+                                            <tr>
+                                                <td>
+                                                    <a href="{{ site_url }}{{ notification.action_url }}" 
+                                                       class="button"
+                                                       style="display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%); color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; padding: 14px 28px; border-radius: 12px;">
+                                                        View in Floatly →
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        {% endif %}
+                                        
+                                        <!-- Timestamp -->
+                                        <p style="margin: 0; font-size: 13px; color: #94a3b8;">
+                                            Sent on {{ notification.created_at|date:"F j, Y" }} at {{ notification.created_at|time:"g:i A" }}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="padding: 24px;">
+                            <p style="margin: 0 0 8px; font-size: 13px; color: #94a3b8;">
+                                You're receiving this because you have notifications enabled.
+                            </p>
+                            <p style="margin: 0; font-size: 13px; color: #94a3b8;">
+                                <a href="{{ site_url }}{% url 'core:notification_preferences' %}" style="color: #8b5cf6; text-decoration: none;">
+                                    Manage notification settings
+                                </a>
+                            </p>
+                            <p style="margin: 16px 0 0; font-size: 12px; color: #cbd5e1;">
+                                © {{ year }} Floatly. Made with ❤️ in Cameroon.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

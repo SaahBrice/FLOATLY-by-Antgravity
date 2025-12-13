@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}Notification Preferences | Floatly{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 dark:bg-slate-900 py-6 px-4">
+    <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-center gap-3 mb-6">
+            <a href="{% url 'core:dashboard' %}" 
+               class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-slate-600 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Notification Settings</h1>
+                <p class="text-sm text-slate-500 dark:text-white/50">Control how and when you receive notifications</p>
+            </div>
+        </div>
+        
+        <!-- Settings Form -->
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Channels Section -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-slate-200 dark:border-white/10">
+                    <h2 class="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        Notification Channels
+                    </h2>
+                </div>
+                
+                <div class="divide-y divide-slate-200 dark:divide-white/10">
+                    <!-- Push Notifications -->
+                    <label class="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-slate-900 dark:text-white">Browser Push</p>
+                                <p class="text-sm text-slate-500 dark:text-white/50">Notifications even when app is closed</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" name="push_enabled" {% if prefs.push_enabled %}checked{% endif %}
+                               class="w-5 h-5 rounded text-violet-600 bg-slate-200 dark:bg-slate-700 border-0 focus:ring-violet-500">
+                    </label>
+                    
+                    <!-- Email Notifications -->
+                    <label class="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-slate-900 dark:text-white">Email</p>
+                                <p class="text-sm text-slate-500 dark:text-white/50">Important alerts to your inbox</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" name="email_enabled" {% if prefs.email_enabled %}checked{% endif %}
+                               class="w-5 h-5 rounded text-violet-600 bg-slate-200 dark:bg-slate-700 border-0 focus:ring-violet-500">
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Notification Types Section -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-slate-200 dark:border-white/10">
+                    <h2 class="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        </svg>
+                        Notification Types
+                    </h2>
+                </div>
+                
+                <div class="divide-y divide-slate-200 dark:divide-white/10">
+                    <!-- Invitations -->
+                    <label class="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">👋</span>
+                            <div>
+                                <p class="font-medium text-slate-900 dark:text-white">Kiosk Invitations</p>
+                                <p class="text-sm text-slate-500 dark:text-white/50">When someone invites you to a kiosk</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" name="invites_enabled" {% if prefs.invites_enabled %}checked{% endif %}
+                               class="w-5 h-5 rounded text-violet-600 bg-slate-200 dark:bg-slate-700 border-0 focus:ring-violet-500">
+                    </label>
+                    
+                    <!-- Fraud Alerts -->
+                    <label class="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🚨</span>
+                            <div>
+                                <p class="font-medium text-slate-900 dark:text-white">Fraud Alerts</p>
+                                <p class="text-sm text-slate-500 dark:text-white/50">Suspicious activity warnings</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" name="fraud_alerts_enabled" {% if prefs.fraud_alerts_enabled %}checked{% endif %}
+                               class="w-5 h-5 rounded text-violet-600 bg-slate-200 dark:bg-slate-700 border-0 focus:ring-violet-500">
+                    </label>
+                    
+                    <!-- Transaction Activity -->
+                    <label class="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">💰</span>
+                            <div>
+                                <p class="font-medium text-slate-900 dark:text-white">Transaction Activity</p>
+                                <p class="text-sm text-slate-500 dark:text-white/50">When team members add/edit transactions</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" name="transaction_alerts_enabled" {% if prefs.transaction_alerts_enabled %}checked{% endif %}
+                               class="w-5 h-5 rounded text-violet-600 bg-slate-200 dark:bg-slate-700 border-0 focus:ring-violet-500">
+                    </label>
+                    
+                    <!-- System Messages -->
+                    <label class="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🔔</span>
+                            <div>
+                                <p class="font-medium text-slate-900 dark:text-white">System Updates</p>
+                                <p class="text-sm text-slate-500 dark:text-white/50">New features and announcements</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" name="system_messages_enabled" {% if prefs.system_messages_enabled %}checked{% endif %}
+                               class="w-5 h-5 rounded text-violet-600 bg-slate-200 dark:bg-slate-700 border-0 focus:ring-violet-500">
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Daily Summary Section -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-slate-200 dark:border-white/10">
+                    <h2 class="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Daily Summary
+                    </h2>
+                </div>
+                
+                <div class="p-4 space-y-4">
+                    <label class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-slate-900 dark:text-white">Receive Daily Summary</p>
+                            <p class="text-sm text-slate-500 dark:text-white/50">Get a daily report of your transactions</p>
+                        </div>
+                        <input type="checkbox" name="daily_summary_enabled" {% if prefs.daily_summary_enabled %}checked{% endif %}
+                               class="w-5 h-5 rounded text-violet-600 bg-slate-200 dark:bg-slate-700 border-0 focus:ring-violet-500">
+                    </label>
+                    
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-slate-900 dark:text-white">Delivery Time</p>
+                            <p class="text-sm text-slate-500 dark:text-white/50">When to receive your summary</p>
+                        </div>
+                        <input type="time" name="summary_time" value="{{ prefs.summary_time|time:'H:i' }}"
+                               class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 border-0 text-slate-900 dark:text-white focus:ring-2 focus:ring-violet-500">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Save Button -->
+            <button type="submit" 
+                    class="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 text-white font-semibold rounded-2xl shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 transition-all hover:-translate-y-0.5">
+                Save Preferences
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

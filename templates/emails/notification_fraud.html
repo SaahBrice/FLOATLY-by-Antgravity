@@ -1,0 +1,37 @@
+{% extends 'emails/notification_base.html' %}
+
+{% block badge %}
+<table role="presentation" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+        <td style="background-color: #fef2f2; color: #dc2626; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 20px; text-transform: uppercase;">
+            🚨 FRAUD ALERT
+        </td>
+    </tr>
+</table>
+{% endblock %}
+
+{% block content %}
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 16px 0; background-color: #fef2f2; border-radius: 12px; border-left: 4px solid #dc2626;">
+    <tr>
+        <td style="padding: 16px;">
+            <p style="margin: 0 0 8px; font-size: 14px; font-weight: 600; color: #dc2626;">
+                ⚠️ Important Security Notice
+            </p>
+            <p style="margin: 0; font-size: 14px; color: #7f1d1d; line-height: 1.5;">
+                This phone number has been flagged by another agent for potential fraud. 
+                Exercise caution when processing transactions involving this number.
+            </p>
+        </td>
+    </tr>
+</table>
+
+<p style="margin: 16px 0; font-size: 14px; color: #475569; line-height: 1.6;">
+    <strong>What you should do:</strong>
+</p>
+<ul style="margin: 0 0 16px; padding-left: 20px; color: #475569; line-height: 1.8;">
+    <li>Verify customer identity thoroughly</li>
+    <li>Cross-check transaction details</li>
+    <li>Contact the customer directly if possible</li>
+    <li>Report any suspicious activity</li>
+</ul>
+{% endblock %}

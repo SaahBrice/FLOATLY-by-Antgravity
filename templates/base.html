@@ -290,6 +290,88 @@
                 detail: { message, type }
             }));
         }
+        
+        // Push notification support
+        {% if user.is_authenticated %}
+        (function initPushNotifications() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                console.log('[Push] Not supported');
+                return;
+            }
+            
+            // Register service worker and subscribe to push
+            navigator.serviceWorker.register('/static/js/serviceworker.js')
+                .then(async (registration) => {
+                    console.log('[ServiceWorker] Registered');
+                    
+                    // Wait a bit for service worker to activate
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Check notification permission
+                    if (Notification.permission === 'granted') {
+                        await subscribeToPush(registration);
+                    } else if (Notification.permission !== 'denied') {
+                        // Request permission
+                        const permission = await Notification.requestPermission();
+                        if (permission === 'granted') {
+                            await subscribeToPush(registration);
+                        }
+                    }
+                })
+                .catch(err => console.error('[ServiceWorker] Error:', err));
+            
+            async function subscribeToPush(registration) {
+                try {
+                    // Check if already subscribed
+                    let subscription = await registration.pushManager.getSubscription();
+                    
+                    if (!subscription) {
+                        const vapidKey = '{{ VAPID_PUBLIC_KEY|default:"" }}';
+                        if (!vapidKey) {
+                            console.log('[Push] No VAPID key');
+                            return;
+                        }
+                        
+                        // Convert VAPID key
+                        const padding = '='.repeat((4 - vapidKey.length % 4) % 4);
+                        const base64 = (vapidKey + padding).replace(/-/g, '+').replace(/_/g, '/');
+                        const rawData = window.atob(base64);
+                        const applicationServerKey = new Uint8Array(rawData.length);
+                        for (let i = 0; i < rawData.length; ++i) {
+                            applicationServerKey[i] = rawData.charCodeAt(i);
+                        }
+                        
+                        subscription = await registration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: applicationServerKey
+                        });
+                    }
+                    
+                    // Send to server
+                    const response = await fetch('/api/push/register/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({
+                            endpoint: subscription.endpoint,
+                            keys: {
+                                p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh')))),
+                                auth: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))))
+                            }
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        console.log('[Push] Subscription registered');
+                    }
+                } catch (error) {
+                    console.error('[Push] Error:', error);
+                }
+            }
+        })();
+        {% endif %}
         </script>
     </body>
 </html>

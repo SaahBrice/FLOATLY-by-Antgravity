@@ -1,0 +1,13 @@
+<!-- Notification List Partial (for infinite scroll) -->
+{% for notification in notifications %}
+    {% include 'notifications/partials/_notification_item.html' with notification=notification %}
+{% endfor %}
+
+{% if has_next %}
+<div class="mt-4 flex justify-center"
+     hx-get="{% url 'core:notifications_load' %}?page={{ next_page }}&type={{ request.GET.type|default:'all' }}"
+     hx-trigger="revealed"
+     hx-swap="outerHTML">
+    <div class="animate-pulse text-slate-400 dark:text-white/30 text-sm">Loading more...</div>
+</div>
+{% endif %}

@@ -1,0 +1,69 @@
+{% extends 'emails/notification_base.html' %}
+
+{% block badge %}
+<table role="presentation" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+        <td style="background-color: #f0fdf4; color: #16a34a; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 20px; text-transform: uppercase;">
+            📊 DAILY SUMMARY
+        </td>
+    </tr>
+</table>
+{% endblock %}
+
+{% block content %}
+<p style="margin: 0 0 16px; font-size: 14px; color: #64748b;">
+    Here's your activity summary for today:
+</p>
+
+<!-- Stats Cards -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+    <tr>
+        <td width="50%" style="padding-right: 8px; padding-bottom: 12px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8fafc; border-radius: 12px;">
+                <tr>
+                    <td style="padding: 16px;">
+                        <p style="margin: 0 0 4px; font-size: 12px; color: #94a3b8; text-transform: uppercase;">Transactions</p>
+                        <p style="margin: 0; font-size: 24px; font-weight: 700; color: #1e293b;">{{ stats.count|default:"0" }}</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td width="50%" style="padding-left: 8px; padding-bottom: 12px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f0fdf4; border-radius: 12px;">
+                <tr>
+                    <td style="padding: 16px;">
+                        <p style="margin: 0 0 4px; font-size: 12px; color: #16a34a; text-transform: uppercase;">Profit</p>
+                        <p style="margin: 0; font-size: 24px; font-weight: 700; color: #16a34a;">{{ stats.profit|default:"0" }} CFA</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td width="50%" style="padding-right: 8px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #ecfdf5; border-radius: 12px;">
+                <tr>
+                    <td style="padding: 16px;">
+                        <p style="margin: 0 0 4px; font-size: 12px; color: #059669; text-transform: uppercase;">↑ Cash In</p>
+                        <p style="margin: 0; font-size: 18px; font-weight: 600; color: #059669;">{{ stats.deposits|default:"0" }} CFA</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td width="50%" style="padding-left: 8px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #fff7ed; border-radius: 12px;">
+                <tr>
+                    <td style="padding: 16px;">
+                        <p style="margin: 0 0 4px; font-size: 12px; color: #ea580c; text-transform: uppercase;">↓ Cash Out</p>
+                        <p style="margin: 0; font-size: 18px; font-weight: 600; color: #ea580c;">{{ stats.withdrawals|default:"0" }} CFA</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<p style="margin: 24px 0 0; font-size: 14px; color: #64748b; line-height: 1.6;">
+    Keep up the great work! Check your dashboard for detailed analytics and insights.
+</p>
+{% endblock %}

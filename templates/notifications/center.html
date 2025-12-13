@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications | Floatly{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 dark:bg-slate-900 py-6 px-4">
+    <div class="max-w-3xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'core:dashboard' %}" 
+                   class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-slate-600 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Notifications</h1>
+                    <p class="text-sm text-slate-500 dark:text-white/50">
+                        {% if unread_count > 0 %}
+                            {{ unread_count }} unread
+                        {% else %}
+                            All caught up!
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            {% if unread_count > 0 %}
+            <form method="post" action="{% url 'core:mark_all_notifications_read' %}">
+                {% csrf_token %}
+                <button type="submit" 
+                        class="text-sm font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition"
+                        hx-post="{% url 'core:mark_all_notifications_read' %}"
+                        hx-swap="outerHTML">
+                    Mark all as read
+                </button>
+            </form>
+            {% endif %}
+        </div>
+        
+        <!-- Filters -->
+        <div class="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-2">
+            {% for value, label in type_choices %}
+            <a href="?type={{ value }}{% if read_filter != 'all' %}&read={{ read_filter }}{% endif %}"
+               class="px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition
+                      {% if filter_type == value %}
+                      bg-violet-600 text-white shadow-lg shadow-violet-500/30
+                      {% else %}
+                      bg-white dark:bg-slate-800 text-slate-600 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-slate-700
+                      {% endif %}">
+                {{ label }}
+            </a>
+            {% endfor %}
+            
+            <div class="ml-auto">
+                <select onchange="window.location.href = '?type={{ filter_type }}&read=' + this.value"
+                        class="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-white">
+                    <option value="all" {% if read_filter == 'all' %}selected{% endif %}>All status</option>
+                    <option value="unread" {% if read_filter == 'unread' %}selected{% endif %}>Unread only</option>
+                    <option value="read" {% if read_filter == 'read' %}selected{% endif %}>Read only</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Notification List -->
+        <div class="space-y-3" id="notification-list">
+            {% if notifications %}
+                {% for notification in notifications %}
+                    {% include 'notifications/partials/_notification_item.html' with notification=notification %}
+                {% endfor %}
+                
+                <!-- Pagination -->
+                {% if page_obj.has_next %}
+                <div class="mt-6 flex justify-center"
+                     hx-get="{% url 'core:notifications_load' %}?page={{ page_obj.next_page_number }}&type={{ filter_type }}"
+                     hx-trigger="revealed"
+                     hx-swap="outerHTML">
+                    <div class="animate-pulse text-slate-400 dark:text-white/30">Loading more...</div>
+                </div>
+                {% endif %}
+            {% else %}
+                <!-- Empty State -->
+                <div class="py-16 text-center">
+                    <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+                        <svg class="w-10 h-10 text-slate-400 dark:text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">No notifications</h3>
+                    <p class="text-slate-500 dark:text-white/50">
+                        {% if filter_type != 'all' %}
+                            No {{ filter_type }} notifications found.
+                        {% else %}
+                            You're all caught up! Check back later.
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

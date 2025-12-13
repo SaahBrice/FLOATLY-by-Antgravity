@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-md mx-auto px-4 text-center">
+        
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden p-8">
+            <div class="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                <span class="text-4xl">⏰</span>
+            </div>
+            
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Invitation Expired</h1>
+            
+            <p class="text-gray-600 mb-6">
+                Sorry, this invitation to <strong>{{ invitation.kiosk.name }}</strong> has expired.
+            </p>
+            
+            <p class="text-sm text-gray-500 mb-6">
+                Please ask {{ invitation.invited_by.display_name }} to send you a new invitation.
+            </p>
+            
+            <a href="{% url 'core:dashboard' %}" 
+               class="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition">
+                Go to Dashboard
+            </a>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

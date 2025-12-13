@@ -1,0 +1,69 @@
+<!-- Notification Dropdown (shows in header) -->
+<div class="p-4 space-y-3 max-h-[400px] overflow-y-auto">
+    {% if notifications %}
+        {% for notification in notifications %}
+        <a href="{% if notification.action_url %}{{ notification.action_url }}{% else %}{% url 'core:notifications' %}{% endif %}"
+           class="block p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition
+                  {% if not notification.is_read %}bg-violet-50/50 dark:bg-violet-500/5{% endif %}"
+           hx-post="{% url 'core:mark_notification_read' pk=notification.id %}"
+           hx-swap="none">
+            <div class="flex gap-3">
+                <!-- Mini Icon -->
+                <div class="flex-shrink-0">
+                    {% if notification.notification_type == 'INVITE' %}
+                    <div class="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
+                        <span class="text-sm">👋</span>
+                    </div>
+                    {% elif notification.notification_type == 'FRAUD' %}
+                    <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
+                        <span class="text-sm">🚨</span>
+                    </div>
+                    {% elif notification.notification_type == 'TRANSACTION' %}
+                    <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+                        <span class="text-sm">💰</span>
+                    </div>
+                    {% elif notification.notification_type == 'SUMMARY' %}
+                    <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                        <span class="text-sm">📊</span>
+                    </div>
+                    {% else %}
+                    <div class="w-8 h-8 rounded-lg bg-slate-500/20 flex items-center justify-center">
+                        <span class="text-sm">🔔</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-slate-900 dark:text-white truncate">
+                        {{ notification.title }}
+                    </p>
+                    <p class="text-xs text-slate-500 dark:text-white/50 truncate">
+                        {{ notification.message|truncatewords:10 }}
+                    </p>
+                    <p class="text-xs text-slate-400 dark:text-white/30 mt-1">
+                        {{ notification.created_at|timesince }} ago
+                    </p>
+                </div>
+                
+                {% if not notification.is_read %}
+                <div class="flex-shrink-0">
+                    <span class="w-2 h-2 rounded-full bg-violet-500 inline-block"></span>
+                </div>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="py-8 text-center">
+            <p class="text-sm text-slate-500 dark:text-white/50">No notifications yet</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Footer -->
+<div class="p-3 border-t border-slate-200 dark:border-slate-700">
+    <a href="{% url 'core:notifications' %}" 
+       class="block text-center text-sm font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition">
+        View all notifications
+    </a>
+</div>

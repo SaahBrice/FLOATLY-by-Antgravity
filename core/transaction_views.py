@@ -23,6 +23,7 @@ from .models import Kiosk, KioskMember, Network, CommissionRate, Transaction
 from .transaction_forms import TransactionForm
 from .sms_parser import parse_sms
 from .gemini_service import extract_transaction_from_image
+from .notification_service import notify_transaction_activity
 
 # Logger for transaction operations
 logger = logging.getLogger('core.transactions')
@@ -140,12 +141,34 @@ class AddTransactionView(LoginRequiredMixin, FormView):
             f"network={transaction.network.code}"
         )
         
+        # Notify kiosk owner and members (except the creator)
+        self._send_transaction_notifications(transaction, 'created')
+        
         messages.success(
             self.request,
             f'✅ Transaction saved! Profit: {transaction.profit:,.0f} CFA'
         )
         
         return redirect('core:dashboard')
+    
+    def _send_transaction_notifications(self, transaction, action):
+        """Send notifications to kiosk owner and members about transaction activity."""
+        users_to_notify = set()
+        
+        # Add owner
+        if self.kiosk.owner != self.request.user:
+            users_to_notify.add(self.kiosk.owner)
+        
+        # Add members
+        for member in KioskMember.objects.filter(kiosk=self.kiosk).select_related('user'):
+            if member.user != self.request.user:
+                users_to_notify.add(member.user)
+        
+        for user in users_to_notify:
+            try:
+                notify_transaction_activity(user, transaction, action, actor=self.request.user)
+            except Exception as e:
+                logger.error(f"Failed to notify user {user.email} about transaction: {e}")
 
 
 class CalculateProfitView(LoginRequiredMixin, View):
@@ -346,12 +369,34 @@ class EditTransactionView(LoginRequiredMixin, FormView):
             f"old_profit={old_profit}, new_profit={transaction.profit}"
         )
         
+        # Notify kiosk owner and members (except the editor)
+        self._send_transaction_notifications(transaction, 'edited')
+        
         messages.success(
             self.request,
             f'✅ Transaction updated! New profit: {transaction.profit:,.0f} CFA'
         )
         
         return redirect('core:dashboard')
+    
+    def _send_transaction_notifications(self, transaction, action):
+        """Send notifications to kiosk owner and members about transaction activity."""
+        users_to_notify = set()
+        
+        # Add owner
+        if self.kiosk.owner != self.request.user:
+            users_to_notify.add(self.kiosk.owner)
+        
+        # Add members
+        for member in KioskMember.objects.filter(kiosk=self.kiosk).select_related('user'):
+            if member.user != self.request.user:
+                users_to_notify.add(member.user)
+        
+        for user in users_to_notify:
+            try:
+                notify_transaction_activity(user, transaction, action, actor=self.request.user)
+            except Exception as e:
+                logger.error(f"Failed to notify user {user.email} about transaction: {e}")
 
 
 class DeleteTransactionView(LoginRequiredMixin, View):
@@ -383,6 +428,9 @@ class DeleteTransactionView(LoginRequiredMixin, View):
             'kiosk': kiosk.name,
         }
         
+        # Notify kiosk members before deletion (owner excludes self)
+        self._send_delete_notifications(transaction, kiosk, request.user)
+        
         transaction.delete()
         
         # Log deletion
@@ -393,6 +441,15 @@ class DeleteTransactionView(LoginRequiredMixin, View):
         messages.success(request, '🗑️ Transaction deleted successfully.')
         
         return redirect('core:dashboard')
+    
+    def _send_delete_notifications(self, transaction, kiosk, actor):
+        """Notify kiosk members about transaction deletion."""
+        for member in KioskMember.objects.filter(kiosk=kiosk).select_related('user'):
+            if member.user != actor:
+                try:
+                    notify_transaction_activity(member.user, transaction, 'deleted', actor=actor)
+                except Exception as e:
+                    logger.error(f"Failed to notify user {member.user.email} about deletion: {e}")
     
     def get(self, request, pk):
         """Show confirmation page."""

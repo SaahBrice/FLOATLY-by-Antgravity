@@ -627,6 +627,12 @@ class Notification(models.Model):
         FRAUD = 'FRAUD', 'Fraud Warning'
         SYSTEM = 'SYSTEM', 'System Message'
         SUMMARY = 'SUMMARY', 'Daily Summary'
+        TRANSACTION = 'TRANSACTION', 'Transaction Alert'
+    
+    class Priority(models.TextChoices):
+        LOW = 'LOW', 'Low'
+        NORMAL = 'NORMAL', 'Normal'
+        HIGH = 'HIGH', 'High'
     
     user = models.ForeignKey(
         User,
@@ -670,6 +676,33 @@ class Notification(models.Model):
         blank=True,
         related_name='notifications',
         help_text='Related kiosk if applicable'
+    )
+    related_transaction = models.ForeignKey(
+        'Transaction',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='notifications',
+        help_text='Related transaction if applicable'
+    )
+    
+    # Priority and delivery tracking
+    priority = models.CharField(
+        'priority',
+        max_length=10,
+        choices=Priority.choices,
+        default=Priority.NORMAL,
+        help_text='Notification priority level'
+    )
+    push_sent = models.BooleanField(
+        'push sent',
+        default=False,
+        help_text='Was push notification sent?'
+    )
+    email_sent = models.BooleanField(
+        'email sent',
+        default=False,
+        help_text='Was email notification sent?'
     )
     
     # Timestamps
@@ -727,3 +760,423 @@ class Notification(models.Model):
             notification_type=cls.NotificationType.FRAUD,
             action_url="/blacklist/"
         )
+    
+    @classmethod
+    def create_system_notification(cls, user, title, message, action_url='', priority='NORMAL'):
+        """Create a system notification."""
+        return cls.objects.create(
+            user=user,
+            title=title,
+            message=message,
+            notification_type=cls.NotificationType.SYSTEM,
+            action_url=action_url,
+            priority=priority
+        )
+    
+    @classmethod
+    def create_daily_summary(cls, user, kiosk, summary_data):
+        """Create a daily summary notification."""
+        return cls.objects.create(
+            user=user,
+            title=f"📊 Daily Summary - {kiosk.name}",
+            message=f"Transactions: {summary_data.get('count', 0)}, Profit: {summary_data.get('profit', 0):,.0f} CFA",
+            notification_type=cls.NotificationType.SUMMARY,
+            action_url=f"/dashboard/?kiosk={kiosk.slug}",
+            related_kiosk=kiosk
+        )
+
+
+# =============================================================================
+# PUSH SUBSCRIPTION MODEL
+# =============================================================================
+
+class PushSubscription(models.Model):
+    """
+    Store push notification subscriptions for users.
+    Supports VAPID web push and FCM tokens.
+    """
+    
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='push_subscriptions',
+        help_text='User who owns this subscription'
+    )
+    endpoint = models.TextField(
+        'endpoint URL',
+        help_text='Push service endpoint URL'
+    )
+    p256dh_key = models.TextField(
+        'p256dh key',
+        blank=True,
+        help_text='Client public key for encryption'
+    )
+    auth_key = models.TextField(
+        'auth key',
+        blank=True,
+        help_text='Authentication secret'
+    )
+    user_agent = models.CharField(
+        'user agent',
+        max_length=500,
+        blank=True,
+        help_text='Browser/device user agent'
+    )
+    is_active = models.BooleanField(
+        'active',
+        default=True,
+        help_text='Is this subscription still valid?'
+    )
+    created_at = models.DateTimeField(
+        'created at',
+        auto_now_add=True
+    )
+    last_used_at = models.DateTimeField(
+        'last used at',
+        null=True,
+        blank=True,
+        help_text='Last time a push was sent to this subscription'
+    )
+    
+    class Meta:
+        verbose_name = 'push subscription'
+        verbose_name_plural = 'push subscriptions'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_active']),
+        ]
+    
+    def __str__(self):
+        status = '✓' if self.is_active else '✗'
+        return f"{status} Push sub for {self.user.display_name}"
+
+
+# =============================================================================
+# NOTIFICATION PREFERENCES MODEL
+# =============================================================================
+
+class NotificationPreference(models.Model):
+    """
+    User preferences for notification delivery.
+    Controls which channels and types of notifications to receive.
+    """
+    
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='notification_preferences',
+        help_text='User these preferences belong to'
+    )
+    
+    # Channel preferences
+    push_enabled = models.BooleanField(
+        'push notifications enabled',
+        default=True,
+        help_text='Receive browser push notifications'
+    )
+    email_enabled = models.BooleanField(
+        'email notifications enabled',
+        default=True,
+        help_text='Receive email notifications'
+    )
+    
+    # Type preferences
+    invites_enabled = models.BooleanField(
+        'invitation notifications',
+        default=True,
+        help_text='Receive kiosk invitation notifications'
+    )
+    fraud_alerts_enabled = models.BooleanField(
+        'fraud alert notifications',
+        default=True,
+        help_text='Receive fraud warning notifications'
+    )
+    system_messages_enabled = models.BooleanField(
+        'system message notifications',
+        default=True,
+        help_text='Receive system updates and announcements'
+    )
+    transaction_alerts_enabled = models.BooleanField(
+        'transaction notifications',
+        default=True,
+        help_text='Receive notifications when team members make transactions'
+    )
+    daily_summary_enabled = models.BooleanField(
+        'daily summary',
+        default=True,
+        help_text='Receive daily summary at specified time'
+    )
+    summary_time = models.TimeField(
+        'summary delivery time',
+        default='20:00',
+        help_text='Time to receive daily summary (local time)'
+    )
+    
+    created_at = models.DateTimeField(
+        'created at',
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        'updated at',
+        auto_now=True
+    )
+    
+    class Meta:
+        verbose_name = 'notification preference'
+        verbose_name_plural = 'notification preferences'
+    
+    def __str__(self):
+        return f"Notification prefs for {self.user.display_name}"
+    
+    @classmethod
+    def get_or_create_for_user(cls, user):
+        """Get or create notification preferences for a user."""
+        prefs, created = cls.objects.get_or_create(user=user)
+        return prefs
+
+
+# =============================================================================
+# KIOSK INVITATION MODEL
+# =============================================================================
+
+class KioskInvitation(models.Model):
+    """
+    Invitation to join a kiosk team.
+    Supports inviting both existing and new users by email.
+    """
+    
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Pending'
+        ACCEPTED = 'ACCEPTED', 'Accepted'
+        DECLINED = 'DECLINED', 'Declined'
+        EXPIRED = 'EXPIRED', 'Expired'
+    
+    kiosk = models.ForeignKey(
+        Kiosk,
+        on_delete=models.CASCADE,
+        related_name='invitations',
+        help_text='The kiosk the user is being invited to'
+    )
+    email = models.EmailField(
+        'invitee email',
+        help_text='Email address of the person being invited'
+    )
+    role = models.CharField(
+        'role',
+        max_length=10,
+        choices=KioskMember.Role.choices,
+        default=KioskMember.Role.AGENT,
+        help_text='Role the invitee will have upon acceptance'
+    )
+    invited_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='sent_invitations',
+        help_text='The user who sent the invitation'
+    )
+    token = models.UUIDField(
+        'invitation token',
+        default=uuid.uuid4,
+        unique=True,
+        editable=False,
+        help_text='Unique token for invitation link'
+    )
+    status = models.CharField(
+        'status',
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING
+    )
+    message = models.TextField(
+        'personal message',
+        blank=True,
+        help_text='Optional message from inviter'
+    )
+    created_at = models.DateTimeField(
+        'created at',
+        auto_now_add=True
+    )
+    expires_at = models.DateTimeField(
+        'expires at',
+        help_text='Invitation expiration date'
+    )
+    accepted_at = models.DateTimeField(
+        'accepted at',
+        null=True,
+        blank=True
+    )
+    
+    class Meta:
+        verbose_name = 'kiosk invitation'
+        verbose_name_plural = 'kiosk invitations'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Invite {self.email} to {self.kiosk.name} ({self.status})"
+    
+    def save(self, *args, **kwargs):
+        # Set expiration to 7 days from now if not set
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timezone.timedelta(days=7)
+        super().save(*args, **kwargs)
+    
+    @property
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+    
+    @property
+    def is_pending(self):
+        return self.status == self.Status.PENDING and not self.is_expired
+    
+    def accept(self, user):
+        """Accept the invitation and add user to kiosk."""
+        if not self.is_pending:
+            raise ValueError("Invitation is no longer valid")
+        
+        # Create membership
+        member, created = KioskMember.objects.get_or_create(
+            kiosk=self.kiosk,
+            user=user,
+            defaults={'role': self.role}
+        )
+        
+        # Update invitation status
+        self.status = self.Status.ACCEPTED
+        self.accepted_at = timezone.now()
+        self.save()
+        
+        return member
+    
+    def decline(self):
+        """Decline the invitation."""
+        if self.status == self.Status.PENDING:
+            self.status = self.Status.DECLINED
+            self.save()
+
+
+# =============================================================================
+# FRAUD REPORT MODEL
+# =============================================================================
+
+class FraudReport(models.Model):
+    """
+    Community fraud report for warning other agents.
+    Multiple reports create a verified threat.
+    """
+    
+    class ReportType(models.TextChoices):
+        FAKE_SMS = 'FAKE_SMS', 'Fake SMS'
+        SCAM_CALL = 'SCAM_CALL', 'Scam Call'
+        FAKE_CALLER = 'FAKE_CALLER', 'Fake Caller'
+        DANGEROUS = 'DANGEROUS', 'Dangerous Warning'
+        OTHER = 'OTHER', 'Other'
+    
+    phone_number = models.CharField(
+        'scammer phone',
+        max_length=20,
+        validators=[phone_validator],
+        db_index=True,
+        help_text='Phone number of the suspected scammer'
+    )
+    scammer_name = models.CharField(
+        'scammer name',
+        max_length=100,
+        blank=True,
+        help_text='Name used by the scammer (if known)'
+    )
+    report_type = models.CharField(
+        'type of fraud',
+        max_length=15,
+        choices=ReportType.choices,
+        default=ReportType.OTHER
+    )
+    description = models.TextField(
+        'description',
+        help_text='What happened? Describe the incident'
+    )
+    proof_image = models.ImageField(
+        'proof screenshot',
+        upload_to='fraud_proofs/%Y/%m/',
+        blank=True,
+        null=True,
+        help_text='Screenshot of fake SMS or other proof'
+    )
+    
+    # Reporter info
+    reporter = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='fraud_reports',
+        help_text='User who submitted this report'
+    )
+    reporter_kiosk = models.ForeignKey(
+        Kiosk,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='fraud_reports',
+        help_text='Kiosk where the incident occurred'
+    )
+    reporter_location = models.CharField(
+        'location',
+        max_length=200,
+        blank=True,
+        help_text='Location for proximity alerts'
+    )
+    
+    # Timestamps and status
+    created_at = models.DateTimeField(
+        'reported at',
+        auto_now_add=True,
+        db_index=True
+    )
+    is_verified = models.BooleanField(
+        'verified threat',
+        default=False,
+        help_text='True if 3+ independent reports'
+    )
+    
+    class Meta:
+        verbose_name = 'fraud report'
+        verbose_name_plural = 'fraud reports'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        status = "⚠️ VERIFIED" if self.is_verified else "Reported"
+        return f"{status}: {self.phone_number} ({self.report_type})"
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Check if this phone should be marked as verified
+        self.check_verification()
+    
+    def check_verification(self):
+        """Mark as verified if 3+ independent reports exist."""
+        report_count = FraudReport.objects.filter(
+            phone_number=self.phone_number
+        ).values('reporter').distinct().count()
+        
+        if report_count >= 3 and not self.is_verified:
+            FraudReport.objects.filter(
+                phone_number=self.phone_number
+            ).update(is_verified=True)
+    
+    @classmethod
+    def get_report_count(cls, phone_number):
+        """Get number of reports for a phone number."""
+        return cls.objects.filter(phone_number=phone_number).count()
+    
+    @classmethod
+    def is_blacklisted(cls, phone_number):
+        """Check if a phone number is in the blacklist."""
+        return cls.objects.filter(phone_number=phone_number).exists()
+    
+    @classmethod
+    def is_verified_threat(cls, phone_number):
+        """Check if a phone number is a verified threat."""
+        return cls.objects.filter(
+            phone_number=phone_number,
+            is_verified=True
+        ).exists()
+

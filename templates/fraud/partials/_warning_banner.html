@@ -1,0 +1,26 @@
+<!-- Fraud Warning Banner - used in transaction form -->
+<div class="rounded-xl p-4 mb-4 {% if level == 'danger' %}bg-red-100 border border-red-300{% else %}bg-amber-100 border border-amber-300{% endif %} animate-pulse">
+    <div class="flex items-start">
+        <div class="flex-shrink-0">
+            {% if level == 'danger' %}
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            {% else %}
+            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            {% endif %}
+        </div>
+        <div class="ml-3 flex-1">
+            <p class="font-bold {% if level == 'danger' %}text-red-800{% else %}text-amber-800{% endif %}">
+                {{ message }}
+            </p>
+            <p class="mt-1 text-sm {% if level == 'danger' %}text-red-700{% else %}text-amber-700{% endif %}">
+                <a href="{% url 'core:blacklist' %}?search={{ phone }}" class="underline font-medium">
+                    View {{ report_count }} report(s) →
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
