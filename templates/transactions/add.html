@@ -620,6 +620,19 @@ function transactionForm() {
                     document.getElementById('id_transaction_ref').value = data.transaction_ref;
                     fieldsUpdated++;
                 }
+                if (data.timestamp) {
+                    // Convert ISO timestamp to datetime-local format
+                    try {
+                        const date = new Date(data.timestamp);
+                        if (!isNaN(date.getTime())) {
+                            const localDateTime = date.toISOString().slice(0, 16);
+                            document.getElementById('id_timestamp').value = localDateTime;
+                            fieldsUpdated++;
+                        }
+                    } catch (e) {
+                        console.log('Could not parse timestamp:', data.timestamp);
+                    }
+                }
                 
                 // Calculate profit with new values
                 if (this.amount && this.networkId) {
@@ -758,6 +771,19 @@ function transactionForm() {
                 if (data.transaction_ref) {
                     document.getElementById('id_transaction_ref').value = data.transaction_ref;
                     fieldsUpdated++;
+                }
+                if (data.timestamp) {
+                    // Convert ISO timestamp to datetime-local format
+                    try {
+                        const date = new Date(data.timestamp);
+                        if (!isNaN(date.getTime())) {
+                            const localDateTime = date.toISOString().slice(0, 16);
+                            document.getElementById('id_timestamp').value = localDateTime;
+                            fieldsUpdated++;
+                        }
+                    } catch (e) {
+                        console.log('Could not parse timestamp:', data.timestamp);
+                    }
                 }
                 
                 // Calculate profit with new values
