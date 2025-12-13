@@ -1,151 +1,525 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ app_name }} - {{ tagline }}{% endblock %}
+{% block title %}Floatly - Digital Logbook for Mobile Money{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex flex-col" x-data="{ mobileMenuOpen: false }">
+<div class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900 transition-colors duration-300" 
+     x-data="{ mobileMenuOpen: false }">
     
-    <!-- Hero Section -->
-    <section class="relative flex-1 flex items-center justify-center px-4 py-12 overflow-hidden">
-        <!-- Animated background blobs -->
-        <div class="absolute inset-0 overflow-hidden pointer-events-none">
-            <div class="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/30 rounded-full blur-3xl animate-pulse"></div>
-            <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-accent-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl"></div>
-        </div>
-        
-        <div class="relative z-10 text-center max-w-2xl mx-auto">
-            <!-- Logo/Icon -->
-            <div class="mb-8 inline-flex items-center justify-center">
-                <div class="relative">
-                    <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary-500 to-accent-600 flex items-center justify-center shadow-2xl shadow-primary-500/30 transform hover:scale-105 transition-transform duration-300">
-                        <svg class="w-14 h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <!-- Navigation -->
+    <nav class="fixed w-full top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200/50 dark:border-white/5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="flex items-center justify-between h-16 md:h-20">
+                <!-- Logo -->
+                <a href="/" class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30 animate-pulse" style="animation-duration: 3s;">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <!-- Status indicator -->
-                    <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-slate-900 pulse-ring"></div>
-                </div>
-            </div>
-            
-            <!-- Title -->
-            <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-primary-200 to-white mb-4">
-                {{ app_name }}
-            </h1>
-            
-            <!-- Tagline -->
-            <p class="text-xl md:text-2xl text-primary-200/80 mb-8 font-light">
-                {{ tagline }}
-            </p>
-            
-            <!-- Feature pills -->
-            <div class="flex flex-wrap justify-center gap-3 mb-10">
-                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur text-white/90 text-sm font-medium border border-white/10">
-                    <span class="w-2 h-2 rounded-full bg-momo-mtn"></span>
-                    MTN MoMo
-                </span>
-                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur text-white/90 text-sm font-medium border border-white/10">
-                    <span class="w-2 h-2 rounded-full bg-momo-orange"></span>
-                    Orange Money
-                </span>
-                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur text-white/90 text-sm font-medium border border-white/10">
-                    <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                    Offline Ready
-                </span>
-            </div>
-            
-            <!-- CTA Buttons -->
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="#" 
-                   class="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-2xl shadow-xl shadow-primary-500/30 hover:shadow-primary-500/50 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-                    <span class="relative z-10 flex items-center gap-2">
-                        Get Started
-                        <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                        </svg>
-                    </span>
-                    <div class="absolute inset-0 bg-gradient-to-r from-primary-500 to-accent-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <span class="text-xl font-bold text-slate-900 dark:text-white">Floatly</span>
                 </a>
                 
-                <a href="{% url 'core:health_check' %}" 
-                   class="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white/90 border-2 border-white/20 rounded-2xl hover:bg-white/10 hover:border-white/40 transition-all duration-300">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    System Status
-                </a>
+                <!-- Desktop Nav -->
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#features" class="text-slate-600 dark:text-white/70 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition" x-text="$store.i18n.t('nav_features')">Features</a>
+                    <a href="#how-it-works" class="text-slate-600 dark:text-white/70 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition">Pricing</a>
+                    <a href="#testimonials" class="text-slate-600 dark:text-white/70 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition">Témoignages</a>
+                </div>
+                
+                <!-- Right Controls -->
+                <div class="flex items-center gap-3">
+                    <!-- Theme Toggle -->
+                    <button @click="$store.theme.toggle()" 
+                            class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/20 transition">
+                        <svg x-show="$store.theme.isDark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <svg x-show="!$store.theme.isDark" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    </button>
+                    
+                    <!-- Language Toggle -->
+                    <div class="hidden sm:flex items-center bg-slate-100 dark:bg-white/10 rounded-xl p-1">
+                        <button @click="$store.i18n.setLang('fr')" 
+                                :class="$store.i18n.lang === 'fr' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-white/50 hover:text-slate-700'"
+                                class="px-3 py-1.5 text-sm font-medium rounded-lg transition">
+                            🇫🇷 FR
+                        </button>
+                        <button @click="$store.i18n.setLang('en')" 
+                                :class="$store.i18n.lang === 'en' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-white/50 hover:text-slate-700'"
+                                class="px-3 py-1.5 text-sm font-medium rounded-lg transition">
+                            🇬🇧 EN
+                        </button>
+                    </div>
+                    
+                    <!-- Auth Buttons -->
+                    <a href="{% url 'core:login' %}" class="hidden md:block text-sm font-medium text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white transition px-4 py-2" x-text="$store.i18n.t('nav_login')">Log In</a>
+                    <a href="{% url 'core:register' %}" 
+                       class="hidden md:flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300 hover:-translate-y-0.5">
+                        <span x-text="$store.i18n.t('nav_signup')">Get Started</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                    </a>
+                    
+                    <!-- Mobile Menu -->
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center">
+                        <svg x-show="!mobileMenuOpen" class="w-5 h-5 text-slate-600 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg x-show="mobileMenuOpen" x-cloak class="w-5 h-5 text-slate-600 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu Dropdown -->
+        <div x-show="mobileMenuOpen" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-4"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-cloak
+             class="md:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-white/10 p-4 space-y-2">
+            <a href="#features" class="block py-3 px-4 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white font-medium" x-text="$store.i18n.t('nav_features')">Features</a>
+            <a href="#how-it-works" class="block py-3 px-4 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white font-medium">Pricing</a>
+            <div class="flex gap-2 pt-2">
+                <a href="{% url 'core:login' %}" class="flex-1 py-3 text-center rounded-xl border border-slate-200 dark:border-white/20 text-slate-700 dark:text-white font-medium" x-text="$store.i18n.t('nav_login')">Log In</a>
+                <a href="{% url 'core:register' %}" class="flex-1 py-3 text-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium" x-text="$store.i18n.t('nav_signup')">Get Started</a>
+            </div>
+            <!-- Mobile Lang Toggle -->
+            <div class="flex justify-center gap-2 pt-2">
+                <button @click="$store.i18n.setLang('fr')" 
+                        :class="$store.i18n.lang === 'fr' ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/60'"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition">🇫🇷 Français</button>
+                <button @click="$store.i18n.setLang('en')" 
+                        :class="$store.i18n.lang === 'en' ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/60'"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition">🇬🇧 English</button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center pt-20 md:pt-24 px-4 overflow-hidden">
+        <!-- Animated Background -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-20 left-10 w-72 h-72 bg-blue-400/20 dark:bg-blue-500/30 rounded-full blur-3xl animate-pulse"></div>
+            <div class="absolute top-40 right-20 w-96 h-96 bg-purple-400/20 dark:bg-purple-500/30 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+            <div class="absolute bottom-20 left-1/3 w-80 h-80 bg-pink-400/15 dark:bg-pink-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+            <!-- Grid pattern -->
+            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgxMDAsMTE2LDEzOSwwLjEpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-50 dark:opacity-30"></div>
+        </div>
+        
+        <div class="relative z-10 max-w-7xl mx-auto w-full">
+            <div class="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+                <!-- Left Content -->
+                <div class="text-center lg:text-left">
+                    <!-- Badge -->
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 border border-blue-500/20 dark:border-blue-400/30 mb-6">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
+                        <span class="text-sm font-medium text-slate-700 dark:text-white/80">🇨🇲 Made for Cameroon</span>
+                    </div>
+                    
+                    <!-- Title -->
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white leading-tight mb-4">
+                        <span x-text="$store.i18n.t('hero_title')">Track Your Float.</span>
+                        <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600" x-text="$store.i18n.t('hero_title2')">Grow Your Business.</span>
+                    </h1>
+                    
+                    <!-- Subtitle -->
+                    <p class="text-lg sm:text-xl text-slate-600 dark:text-white/70 max-w-xl mx-auto lg:mx-0 mb-8" x-text="$store.i18n.t('hero_subtitle')">
+                        The digital logbook for mobile money agents in Cameroon
+                    </p>
+                    
+                    <!-- Network Badges -->
+                    <div class="flex flex-wrap justify-center lg:justify-start gap-3 mb-8">
+                        <div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-400/10 dark:bg-yellow-500/20 border border-yellow-400/30">
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <span class="font-semibold text-yellow-700 dark:text-yellow-400">MTN MoMo</span>
+                        </div>
+                        <div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-400/10 dark:bg-orange-500/20 border border-orange-400/30">
+                            <div class="w-3 h-3 rounded-full bg-orange-500"></div>
+                            <span class="font-semibold text-orange-700 dark:text-orange-400">Orange Money</span>
+                        </div>
+                        <div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-400/10 dark:bg-green-500/20 border border-green-400/30">
+                            <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="font-semibold text-green-700 dark:text-green-400" x-text="$store.i18n.t('pill_offline')">Works Offline</span>
+                        </div>
+                    </div>
+                    
+                    <!-- CTA Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
+                        <a href="{% url 'core:register' %}" 
+                           class="group inline-flex items-center justify-center gap-3 px-8 py-4 text-lg font-bold text-white bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 rounded-2xl shadow-2xl shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-300 hover:-translate-y-1">
+                            <span x-text="$store.i18n.t('hero_cta')">Start Free</span>
+                            <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </a>
+                        <a href="#how-it-works" 
+                           class="group inline-flex items-center justify-center gap-3 px-8 py-4 text-lg font-semibold text-slate-700 dark:text-white bg-white dark:bg-white/10 hover:bg-slate-50 dark:hover:bg-white/20 rounded-2xl border border-slate-200 dark:border-white/20 shadow-lg transition-all duration-300">
+                            <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                            </svg>
+                            <span x-text="$store.i18n.t('hero_cta2')">Watch Demo</span>
+                        </a>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="flex flex-wrap justify-center lg:justify-start gap-8 pt-4 border-t border-slate-200 dark:border-white/10">
+                        <div>
+                            <p class="text-3xl font-black text-slate-900 dark:text-white">500+</p>
+                            <p class="text-sm text-slate-500 dark:text-white/50">Active Agents</p>
+                        </div>
+                        <div>
+                            <p class="text-3xl font-black text-slate-900 dark:text-white">2M+</p>
+                            <p class="text-sm text-slate-500 dark:text-white/50">CFA Tracked Daily</p>
+                        </div>
+                        <div>
+                            <p class="text-3xl font-black text-slate-900 dark:text-white">99.9%</p>
+                            <p class="text-sm text-slate-500 dark:text-white/50">Uptime</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right - Phone Mockup -->
+                <div class="relative flex justify-center lg:justify-end">
+                    <!-- Phone Frame -->
+                    <div class="relative z-10">
+                        <div class="w-72 sm:w-80 bg-slate-800 rounded-[3rem] p-3 shadow-2xl shadow-slate-900/60 dark:shadow-black/80 border-4 border-slate-700 transform hover:scale-105 transition-transform duration-500">
+                            <div class="w-full h-[580px] bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 rounded-[2.5rem] overflow-hidden relative">
+                                <!-- Phone Notch -->
+                                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-7 bg-black rounded-b-2xl z-20"></div>
+                                
+                                <!-- Status Bar -->
+                                <div class="flex items-center justify-between px-8 pt-3 text-white/70 text-xs relative z-10">
+                                    <span class="font-medium">9:41</span>
+                                    <div class="flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2 4.5A2.5 2.5 0 014.5 2h11a2.5 2.5 0 010 5h-11A2.5 2.5 0 012 4.5zM4.5 5a.5.5 0 000 1h11a.5.5 0 000-1h-11z"/></svg>
+                                    </div>
+                                </div>
+                                
+                                <!-- App Content -->
+                                <div class="p-5 pt-8 space-y-5">
+                                    <!-- Greeting -->
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-white/50 text-sm">Bonjour 👋</p>
+                                            <p class="text-white font-bold text-lg">Marie Ngono</p>
+                                        </div>
+                                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm">MN</div>
+                                    </div>
+                                    
+                                    <!-- Balance Card -->
+                                    <div class="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl p-5 shadow-xl">
+                                        <p class="text-white/70 text-sm mb-1">Solde du jour</p>
+                                        <p class="text-4xl font-black text-white mb-4">2,450,000 <span class="text-lg font-normal opacity-70">CFA</span></p>
+                                        <div class="flex gap-3">
+                                            <div class="flex-1 bg-white/20 rounded-xl p-3 backdrop-blur">
+                                                <p class="text-white/70 text-xs">↑ Entrées</p>
+                                                <p class="text-white font-bold">+850,000</p>
+                                            </div>
+                                            <div class="flex-1 bg-white/20 rounded-xl p-3 backdrop-blur">
+                                                <p class="text-white/70 text-xs">↓ Sorties</p>
+                                                <p class="text-white font-bold">-420,000</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Today's Profit -->
+                                    <div class="bg-white/10 backdrop-blur rounded-2xl p-4">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="text-white/50 text-sm">Profit du jour</p>
+                                                <p class="text-3xl font-black text-green-400">+15,750 <span class="text-sm font-normal text-white/50">CFA</span></p>
+                                            </div>
+                                            <div class="w-14 h-14 rounded-2xl bg-green-500/20 flex items-center justify-center">
+                                                <svg class="w-7 h-7 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Recent Transactions -->
+                                    <div>
+                                        <p class="text-white/50 text-sm mb-3">Dernières transactions</p>
+                                        <div class="space-y-3">
+                                            <div class="flex items-center gap-3 bg-white/5 rounded-xl p-3">
+                                                <div class="w-9 h-9 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                                    <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p class="text-white text-sm font-medium">Cash In • MTN</p>
+                                                    <p class="text-white/50 text-xs">il y a 5 min</p>
+                                                </div>
+                                                <p class="text-green-400 font-bold">+50,000</p>
+                                            </div>
+                                            <div class="flex items-center gap-3 bg-white/5 rounded-xl p-3">
+                                                <div class="w-9 h-9 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                                                    <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p class="text-white text-sm font-medium">Cash Out • Orange</p>
+                                                    <p class="text-white/50 text-xs">il y a 12 min</p>
+                                                </div>
+                                                <p class="text-orange-400 font-bold">-25,000</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Floating Cards (closer to phone) -->
+                    <div class="absolute left-0 top-20 bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-2xl shadow-slate-900/20 dark:shadow-black/40 border border-slate-200 dark:border-white/10 animate-bounce z-20" style="animation-duration: 4s;">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-green-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-500 dark:text-white/50">Cash In</p>
+                                <p class="text-lg font-bold text-slate-900 dark:text-white">+50,000 CFA</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute right-0 sm:-right-4 top-1/3 bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-2xl shadow-slate-900/20 dark:shadow-black/40 border border-slate-200 dark:border-white/10 animate-bounce z-20" style="animation-duration: 5s; animation-delay: 0.5s;">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
+                                <span class="text-xl">💰</span>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-500 dark:text-white/50">Profit</p>
+                                <p class="text-lg font-bold text-green-500">+750 CFA</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute left-4 bottom-20 bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-2xl shadow-slate-900/20 dark:shadow-black/40 border border-slate-200 dark:border-white/10 animate-bounce z-20" style="animation-duration: 6s; animation-delay: 1s;">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-500 dark:text-white/50">Synced</p>
+                                <p class="text-sm font-bold text-slate-900 dark:text-white">12 transactions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
     
-    <!-- Features Preview -->
-    <section class="relative px-4 py-16 bg-slate-900/50 backdrop-blur">
+    <!-- Trusted By Section -->
+    <section class="py-12 px-4 bg-white dark:bg-slate-800/50 border-y border-slate-200 dark:border-white/10">
+        <div class="max-w-6xl mx-auto text-center">
+            <p class="text-sm text-slate-500 dark:text-white/50 mb-6">Utilisé par des agents dans tout le Cameroun</p>
+            <div class="flex flex-wrap justify-center items-center gap-8 opacity-60">
+                <span class="text-2xl font-bold text-slate-400 dark:text-white/30">Douala</span>
+                <span class="text-2xl font-bold text-slate-400 dark:text-white/30">Yaoundé</span>
+                <span class="text-2xl font-bold text-slate-400 dark:text-white/30">Bamenda</span>
+                <span class="text-2xl font-bold text-slate-400 dark:text-white/30">Bafoussam</span>
+                <span class="text-2xl font-bold text-slate-400 dark:text-white/30">Kribi</span>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Features Section -->
+    <section id="features" class="py-20 md:py-32 px-4">
         <div class="max-w-6xl mx-auto">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-white mb-4">Built for Mobile Money Agents</h2>
-                <p class="text-primary-200/60 max-w-xl mx-auto">Everything you need to manage your kiosk, track transactions, and grow your business.</p>
+            <div class="text-center mb-16">
+                <span class="inline-block px-4 py-1.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-sm font-semibold mb-4">FONCTIONNALITÉS</span>
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mb-4" x-text="$store.i18n.t('features_title')">Built for Mobile Money Agents</h2>
+                <p class="text-lg text-slate-600 dark:text-white/60 max-w-2xl mx-auto" x-text="$store.i18n.t('features_subtitle')">Everything you need to manage your kiosk and track profits</p>
             </div>
             
-            <div class="grid md:grid-cols-3 gap-6">
-                <!-- Feature Card 1 -->
-                <div class="group p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-primary-500/50 hover:bg-white/10 transition-all duration-300">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Feature 1 -->
+                <div class="group p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 hover:-translate-y-2">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-green-500/30">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold text-white mb-2">Auto Profit Calculator</h3>
-                    <p class="text-primary-200/60 text-sm">Automatic commission calculation based on official telco rates. No more guessing.</p>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2" x-text="$store.i18n.t('feature1_title')">Auto Profit Calculator</h3>
+                    <p class="text-slate-600 dark:text-white/60" x-text="$store.i18n.t('feature1_desc')">Automatic commission calculation based on official rates</p>
                 </div>
                 
-                <!-- Feature Card 2 -->
-                <div class="group p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-primary-500/50 hover:bg-white/10 transition-all duration-300">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-primary-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- Feature 2 -->
+                <div class="group p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 hover:-translate-y-2">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/30">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold text-white mb-2">Multi-Kiosk Management</h3>
-                    <p class="text-primary-200/60 text-sm">Manage multiple locations from one account. Switch contexts instantly.</p>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2" x-text="$store.i18n.t('feature2_title')">Multi-Kiosk Management</h3>
+                    <p class="text-slate-600 dark:text-white/60" x-text="$store.i18n.t('feature2_desc')">Manage multiple locations from one account</p>
                 </div>
                 
-                <!-- Feature Card 3 -->
-                <div class="group p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-primary-500/50 hover:bg-white/10 transition-all duration-300">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-accent-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                <!-- Feature 3 -->
+                <div class="group p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 hover:-translate-y-2">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/30">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold text-white mb-2">Smart Notifications</h3>
-                    <p class="text-primary-200/60 text-sm">Real-time alerts for invites, fraud warnings, and daily summaries.</p>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2" x-text="$store.i18n.t('feature3_title')">Works Offline</h3>
+                    <p class="text-slate-600 dark:text-white/60" x-text="$store.i18n.t('feature3_desc')">No internet? No problem. Sync when back online</p>
+                </div>
+                
+                <!-- Feature 4 -->
+                <div class="group p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 hover:-translate-y-2">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-orange-500/30">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2" x-text="$store.i18n.t('feature4_title')">Team Access</h3>
+                    <p class="text-slate-600 dark:text-white/60" x-text="$store.i18n.t('feature4_desc')">Invite cashiers with controlled permissions</p>
                 </div>
             </div>
+        </div>
+    </section>
+    
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="py-20 md:py-32 px-4 bg-gradient-to-br from-slate-100 to-white dark:from-slate-800/50 dark:to-slate-900">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-16">
+                <span class="inline-block px-4 py-1.5 rounded-full bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-sm font-semibold mb-4">COMMENT ÇA MARCHE</span>
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white" x-text="$store.i18n.t('how_title')">How It Works</h2>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 relative">
+                <!-- Connector Line -->
+                <div class="hidden md:block absolute top-16 left-1/6 right-1/6 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 rounded-full"></div>
+                
+                <!-- Step 1 -->
+                <div class="relative text-center">
+                    <div class="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-blue-500/40 relative z-10">1</div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2" x-text="$store.i18n.t('step1_title')">Create Account</h3>
+                    <p class="text-slate-600 dark:text-white/60" x-text="$store.i18n.t('step1_desc')">Sign up in 30 seconds</p>
+                </div>
+                
+                <!-- Step 2 -->
+                <div class="relative text-center">
+                    <div class="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-purple-500/40 relative z-10">2</div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2" x-text="$store.i18n.t('step2_title')">Add Transactions</h3>
+                    <p class="text-slate-600 dark:text-white/60" x-text="$store.i18n.t('step2_desc')">Log deposits & withdrawals</p>
+                </div>
+                
+                <!-- Step 3 -->
+                <div class="relative text-center">
+                    <div class="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-green-500/40 relative z-10">3</div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2" x-text="$store.i18n.t('step3_title')">Track Profits</h3>
+                    <p class="text-slate-600 dark:text-white/60" x-text="$store.i18n.t('step3_desc')">See your earnings in real-time</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CTA Section -->
+    <section class="py-20 md:py-32 px-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden">
+        <!-- Floating shapes -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute -top-24 -left-24 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
+        </div>
+        
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-6" x-text="$store.i18n.t('cta_title')">Ready to Simplify Your Business?</h2>
+            <p class="text-xl text-white/80 mb-10" x-text="$store.i18n.t('cta_subtitle')">Join hundreds of agents already using Floatly</p>
+            
+            <a href="{% url 'core:register' %}" 
+               class="inline-flex items-center justify-center gap-3 px-10 py-5 text-xl font-bold text-purple-600 bg-white hover:bg-slate-100 rounded-2xl shadow-2xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:scale-105">
+                <span x-text="$store.i18n.t('cta_button')">Get Started Free</span>
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+            </a>
+            
+            <p class="mt-8 text-white/60">
+                <span x-text="$store.i18n.t('cta_login')">Already have an account?</span>
+                <a href="{% url 'core:login' %}" class="text-white underline font-medium ml-1" x-text="$store.i18n.t('nav_login')">Log In</a>
+            </p>
         </div>
     </section>
     
     <!-- Footer -->
-    <footer class="px-4 py-8 border-t border-white/10">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-600 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+    <footer class="py-12 px-4 bg-slate-900 dark:bg-black">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <!-- Brand -->
+                <div class="md:col-span-2">
+                    <div class="flex items-center gap-2.5 mb-4">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <span class="text-xl font-bold text-white">Floatly</span>
+                    </div>
+                    <p class="text-slate-400 mb-4 max-w-sm" x-text="$store.i18n.t('footer_copyright')">© 2024 Floatly. Built for Cameroon's mobile money agents.</p>
                 </div>
-                <span class="text-white font-semibold">Floatly</span>
+                
+                <!-- Links -->
+                <div>
+                    <h4 class="font-semibold text-white mb-4">Product</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#features" class="text-slate-400 hover:text-white transition" x-text="$store.i18n.t('nav_features')">Features</a></li>
+                        <li><a href="#how-it-works" class="text-slate-400 hover:text-white transition">Pricing</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-white mb-4">Legal</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-slate-400 hover:text-white transition" x-text="$store.i18n.t('footer_privacy')">Privacy</a></li>
+                        <li><a href="#" class="text-slate-400 hover:text-white transition" x-text="$store.i18n.t('footer_terms')">Terms</a></li>
+                    </ul>
+                </div>
             </div>
-            <p class="text-primary-200/40 text-sm">
-                &copy; 2024 Floatly. Built for Cameroon's mobile money agents.
-            </p>
-            <div class="flex items-center gap-4">
-                <span class="inline-flex items-center gap-1 text-xs text-green-400">
-                    <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                    System Online
-                </span>
+            
+            <!-- Bottom -->
+            <div class="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-white/10 gap-4">
+                <div class="flex items-center gap-4">
+                    <!-- Footer Theme Toggle -->
+                    <button @click="$store.theme.toggle()" 
+                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 text-slate-400 hover:text-white text-sm transition">
+                        <svg x-show="$store.theme.isDark" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        <svg x-show="!$store.theme.isDark" x-cloak class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                        <span x-text="$store.theme.isDark ? 'Light' : 'Dark'">Dark</span>
+                    </button>
+                    
+                    <!-- Footer Lang Toggle -->
+                    <div class="flex items-center bg-white/10 rounded-lg p-0.5">
+                        <button @click="$store.i18n.setLang('fr')" 
+                                :class="$store.i18n.lang === 'fr' ? 'bg-white/20 text-white' : 'text-slate-500'"
+                                class="px-2.5 py-1 text-xs font-medium rounded-md transition">🇫🇷</button>
+                        <button @click="$store.i18n.setLang('en')" 
+                                :class="$store.i18n.lang === 'en' ? 'bg-white/20 text-white' : 'text-slate-500'"
+                                class="px-2.5 py-1 text-xs font-medium rounded-md transition">🇬🇧</button>
+                    </div>
+                </div>
+                
+                <p class="text-slate-500 text-sm">Made with ❤️ in Cameroon</p>
             </div>
         </div>
     </footer>
 </div>
+
+<style>
+    [x-cloak] { display: none !important; }
+</style>
 {% endblock %}
