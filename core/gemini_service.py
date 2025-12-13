@@ -23,8 +23,8 @@ class ExtractedTransactionData:
     transaction_type: Optional[str] = None
     amount: Optional[Decimal] = None
     customer_phone: Optional[str] = None
+    customer_name: Optional[str] = None
     transaction_ref: Optional[str] = None
-    sender_name: Optional[str] = None
     timestamp: Optional[str] = None
     confidence: float = 0.0
     raw_response: str = ""
@@ -35,29 +35,41 @@ class GeminiService:
     Service for interacting with Google Gemini API for image analysis.
     """
     
-    MODEL = "gemini-1.5-flash"
+    MODEL = "gemini-2.5-flash-lite"
     
-    EXTRACTION_PROMPT = """Analyze this mobile money transaction receipt/screenshot and extract the following information in JSON format:
+    EXTRACTION_PROMPT = """You are REEPLS AI, specialized in extracting data from Cameroon mobile money transaction receipts.
+
+Analyze this receipt image and extract transaction information in JSON format:
 
 {
     "network": "MTN" or "OM" (Orange Money) or "EU" (Express Union) or null,
     "transaction_type": "DEPOSIT" (cash in/received money) or "WITHDRAWAL" (cash out/sent money) or null,
     "amount": number (in CFA, without currency symbol),
     "customer_phone": "phone number" or null,
-    "transaction_ref": "transaction ID/reference" or null,
-    "sender_name": "sender's name" or null,
-    "timestamp": "transaction date/time" or null,
+    "customer_name": "customer/sender/recipient name" or null,
+    "transaction_ref": "transaction ID/reference number" or null,
+    "timestamp": "transaction date/time in ISO format" or null,
     "confidence": 0.0 to 1.0 (your confidence in the extraction)
 }
 
-Important notes:
-- For transaction_type: "DEPOSIT" means the kiosk RECEIVED money from a customer (cash in)
-- For transaction_type: "WITHDRAWAL" means the kiosk GAVE money to a customer (cash out)
-- Amount should be just the number, no currency symbol
-- Phone numbers should include country code if visible
-- Return ONLY valid JSON, no other text
+NETWORK DETECTION RULES (Cameroon):
+- MTN: Phone starts with 67, 650-654, 680-681 (e.g., 670xxxxxx, 651xxxxxx)
+- Orange (OM): Phone starts with 69, 655-659 (e.g., 690xxxxxx, 656xxxxxx)
+- If receipt shows MTN logo/colors (yellow) → "MTN"
+- If receipt shows Orange logo/colors (orange) → "OM"
 
-If you cannot extract any field, set it to null."""
+TRANSACTION TYPE RULES:
+- "DEPOSIT" = Customer sent money TO the kiosk (cash in, received)
+- "WITHDRAWAL" = Customer took cash FROM the kiosk (cash out, sent, transfer)
+- Look for keywords: "Reçu", "Envoyé", "Retrait", "Dépôt", "Cash In", "Cash Out"
+
+IMPORTANT:
+- Amount should be the main transaction value (number only, no "CFA" or "FCFA")
+- customer_name is the sender OR recipient name shown on receipt
+- transaction_ref is the unique transaction ID (often starts with letters/numbers mix)
+- Return ONLY valid JSON, no markdown or extra text
+
+If you cannot extract a field, set it to null."""
 
     def __init__(self):
         self.api_key = os.environ.get('GOOGLE_GEMINI_API_KEY', '')
@@ -74,8 +86,14 @@ If you cannot extract any field, set it to null."""
         Returns:
             ExtractedTransactionData with the parsed information
         """
+        print(f"DEBUG: Gemini API Key present: {bool(self.api_key)}")
+        if self.api_key:
+            print(f"DEBUG: API Key length: {len(self.api_key)}")
+            print(f"DEBUG: API Key prefix: {self.api_key[:4]}...")
+
         if not self.api_key:
             logger.warning("GOOGLE_GEMINI_API_KEY not set, returning empty result")
+            print("DEBUG: GOOGLE_GEMINI_API_KEY is missing!")
             return ExtractedTransactionData(
                 raw_response="API key not configured"
             )
@@ -105,6 +123,7 @@ If you cannot extract any field, set it to null."""
                 }
             }
             
+            print(f"DEBUG: Sending request to Gemini API... URL: {self.api_url}")
             response = requests.post(
                 f"{self.api_url}?key={self.api_key}",
                 json=payload,
@@ -112,20 +131,27 @@ If you cannot extract any field, set it to null."""
                 timeout=30
             )
             
+            print(f"DEBUG: Response status: {response.status_code}")
+            
             if response.status_code != 200:
                 logger.error(f"Gemini API error: {response.status_code} - {response.text}")
+                print(f"DEBUG: API Error Body: {response.text}")
                 return ExtractedTransactionData(
                     raw_response=f"API error: {response.status_code}"
                 )
             
             # Parse response
             result = response.json()
+            # print(f"DEBUG: Full API Response: {json.dumps(result, indent=2)}")
+            
             text_content = result.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+            print(f"DEBUG: Extracted text content: {text_content}")
             
             return self._parse_ai_response(text_content)
             
         except Exception as e:
             logger.exception(f"Error calling Gemini API: {e}")
+            print(f"DEBUG: Exception during API call: {e}")
             return ExtractedTransactionData(
                 raw_response=f"Error: {str(e)}"
             )
@@ -141,8 +167,12 @@ If you cannot extract any field, set it to null."""
             # Remove markdown code blocks if present
             if json_match.startswith("```"):
                 lines = json_match.split("\n")
-                json_match = "\n".join(lines[1:-1])
+                # Handle cases where language identifier is present or not
+                if lines[0].strip().startswith("```"):
+                    # Remove first and last lines
+                    json_match = "\n".join(lines[1:-1])
             
+            print(f"DEBUG: JSON to parse: {json_match}")
             data = json.loads(json_match)
             
             result.network = data.get("network")
@@ -155,13 +185,14 @@ If you cannot extract any field, set it to null."""
                     pass
             
             result.customer_phone = data.get("customer_phone")
+            result.customer_name = data.get("customer_name")
             result.transaction_ref = data.get("transaction_ref")
-            result.sender_name = data.get("sender_name")
             result.timestamp = data.get("timestamp")
             result.confidence = float(data.get("confidence", 0.0))
             
         except json.JSONDecodeError as e:
             logger.warning(f"Failed to parse AI response as JSON: {e}")
+            print(f"DEBUG: JSON Parse Error: {e}")
             result.confidence = 0.0
         
         return result
@@ -189,8 +220,146 @@ def extract_transaction_from_image(image_data: bytes, mime_type: str = "image/jp
         'transaction_type': result.transaction_type,
         'amount': str(result.amount) if result.amount else None,
         'customer_phone': result.customer_phone,
+        'customer_name': result.customer_name,
         'transaction_ref': result.transaction_ref,
-        'sender_name': result.sender_name,
         'timestamp': result.timestamp,
         'confidence': result.confidence,
     }
+
+
+# Voice extraction prompt
+VOICE_EXTRACTION_PROMPT = """You are REEPLS AI, specialized in extracting transaction data from spoken Cameroonian mobile money descriptions.
+
+The user described a mobile money transaction. Extract the information in JSON format:
+
+{
+    "network": "MTN" or "OM" (Orange Money) or "EU" (Express Union) or null,
+    "transaction_type": "DEPOSIT" (cash in/received money) or "WITHDRAWAL" (cash out/sent money/transfer) or null,
+    "amount": number (in CFA/franc, without currency symbol),
+    "customer_phone": "phone number" or null,
+    "customer_name": "customer/sender/recipient name" or null,
+    "transaction_ref": null,
+    "timestamp": "transaction date/time in ISO format" or null,
+    "confidence": 0.0 to 1.0 (your confidence in the extraction)
+}
+
+NETWORK DETECTION RULES:
+- "MTN", "mtn", "MTN MoMo", "MoMo" → "MTN"
+- "Orange", "orange money", "OM" → "OM"
+- "Express Union", "EU" → "EU"
+
+TRANSACTION TYPE RULES:
+- "cashout", "cash out", "withdrawal", "sent", "transfer", "sending" → "WITHDRAWAL"
+- "cashin", "cash in", "deposit", "received", "receiving" → "DEPOSIT"
+
+AMOUNT RULES:
+- "15000 francs", "15,000 CFA", "quinze mille" → 15000
+- Handle spoken numbers in French or English
+
+Return ONLY valid JSON, no markdown or extra text.
+If you cannot understand a field, set it to null."""
+
+
+def extract_transaction_from_voice(audio_data: bytes, mime_type: str = "audio/webm") -> Dict[str, Any]:
+    """
+    Extract transaction data from voice recording using Gemini API.
+    
+    Args:
+        audio_data: Raw audio bytes
+        mime_type: Audio MIME type (audio/webm, audio/mp3, etc.)
+        
+    Returns:
+        Dictionary with extracted transaction data
+    """
+    api_key = os.environ.get('GOOGLE_GEMINI_API_KEY')
+    
+    if not api_key:
+        logger.warning("GOOGLE_GEMINI_API_KEY not set, returning empty result")
+        return {
+            'network': None,
+            'transaction_type': None,
+            'amount': None,
+            'customer_phone': None,
+            'customer_name': None,
+            'transaction_ref': None,
+            'timestamp': None,
+            'confidence': 0.0,
+        }
+    
+    try:
+        import requests
+        
+        # Encode audio to base64
+        audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+        
+        # Prepare request for Gemini with audio
+        payload = {
+            "contents": [{
+                "parts": [
+                    {"text": VOICE_EXTRACTION_PROMPT},
+                    {
+                        "inline_data": {
+                            "mime_type": mime_type,
+                            "data": audio_base64
+                        }
+                    }
+                ]
+            }],
+            "generationConfig": {
+                "temperature": 0.1,
+                "maxOutputTokens": 500,
+            }
+        }
+        
+        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+        
+        response = requests.post(
+            f"{api_url}?key={api_key}",
+            json=payload,
+            headers={"Content-Type": "application/json"},
+            timeout=30
+        )
+        
+        if response.status_code != 200:
+            logger.error(f"Gemini API error: {response.status_code} - {response.text}")
+            return {
+                'network': None,
+                'transaction_type': None,
+                'amount': None,
+                'customer_phone': None,
+                'customer_name': None,
+                'transaction_ref': None,
+                'timestamp': None,
+                'confidence': 0.0,
+            }
+        
+        # Parse response
+        result = response.json()
+        text_content = result.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+        
+        # Parse JSON from response
+        parsed_result = gemini_service._parse_ai_response(text_content)
+        
+        return {
+            'network': parsed_result.network,
+            'transaction_type': parsed_result.transaction_type,
+            'amount': str(parsed_result.amount) if parsed_result.amount else None,
+            'customer_phone': parsed_result.customer_phone,
+            'customer_name': parsed_result.customer_name,
+            'transaction_ref': parsed_result.transaction_ref,
+            'timestamp': parsed_result.timestamp,
+            'confidence': parsed_result.confidence,
+        }
+        
+    except Exception as e:
+        logger.exception(f"Error processing voice with Gemini API: {e}")
+        return {
+            'network': None,
+            'transaction_type': None,
+            'amount': None,
+            'customer_phone': None,
+            'customer_name': None,
+            'transaction_ref': None,
+            'timestamp': None,
+            'confidence': 0.0,
+        }

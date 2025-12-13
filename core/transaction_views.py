@@ -13,8 +13,13 @@ import json
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.views.generic import FormView, TemplateView
+from django.views.generic import FormView, TemplateView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse, HttpResponse, Http404
+from django.contrib import messages
+from django.urls import reverse
+from django.db.models import Q, Sum, Count
+from django.db.models.functions import Coalesce
 from django.http import JsonResponse, HttpResponse, Http404
 from django.contrib import messages
 from django.urls import reverse
@@ -22,7 +27,7 @@ from django.urls import reverse
 from .models import Kiosk, KioskMember, Network, CommissionRate, Transaction
 from .transaction_forms import TransactionForm
 from .sms_parser import parse_sms
-from .gemini_service import extract_transaction_from_image
+from .gemini_service import extract_transaction_from_image, extract_transaction_from_voice
 from .notification_service import notify_transaction_activity
 
 # Logger for transaction operations
@@ -144,12 +149,36 @@ class AddTransactionView(LoginRequiredMixin, FormView):
         # Notify kiosk owner and members (except the creator)
         self._send_transaction_notifications(transaction, 'created')
         
+        # Check if AJAX request - return JSON for frontend toast
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'message': f'Transaction saved!',
+                'profit': f'{transaction.profit:,.0f}',
+                'amount': f'{transaction.amount:,.0f}',
+                'transaction_id': transaction.id
+            })
+        
+        # Regular form submission - redirect to dashboard
         messages.success(
             self.request,
             f'✅ Transaction saved! Profit: {transaction.profit:,.0f} CFA'
         )
-        
         return redirect('core:dashboard')
+    
+    def form_invalid(self, form):
+        # Check if AJAX request - return JSON error response
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            errors = []
+            for field, field_errors in form.errors.items():
+                for error in field_errors:
+                    errors.append(f"{field}: {error}" if field != '__all__' else error)
+            return JsonResponse({
+                'success': False,
+                'error': errors[0] if errors else 'Please check the form for errors',
+                'errors': errors
+            })
+        return super().form_invalid(form)
     
     def _send_transaction_notifications(self, transaction, action):
         """Send notifications to kiosk owner and members about transaction activity."""
@@ -273,6 +302,45 @@ class ProcessReceiptImageView(LoginRequiredMixin, View):
         
         return JsonResponse(result)
 
+
+class ProcessVoiceView(LoginRequiredMixin, View):
+    """
+    Endpoint for processing voice recordings with AI.
+    Returns extracted transaction data as JSON.
+    """
+    
+    def post(self, request):
+        if 'audio' not in request.FILES:
+            return JsonResponse({'error': 'No audio provided'}, status=400)
+        
+        audio_file = request.FILES['audio']
+        
+        # Validate file type
+        allowed_types = ['audio/webm', 'audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/ogg']
+        content_type = audio_file.content_type
+        
+        # Be lenient with content type matching
+        is_valid = any(t in content_type for t in ['audio', 'webm', 'ogg'])
+        if not is_valid:
+            return JsonResponse({'error': f'Invalid audio type: {content_type}'}, status=400)
+        
+        # Validate file size (max 2MB for 10s audio)
+        if audio_file.size > 2 * 1024 * 1024:
+            return JsonResponse({'error': 'Audio too large (max 2MB)'}, status=400)
+        
+        # Extract data using Gemini
+        audio_data = audio_file.read()
+        result = extract_transaction_from_voice(audio_data, content_type)
+        
+        # Map network code to ID
+        if result.get('network'):
+            try:
+                network = Network.objects.get(code=result['network'])
+                result['network_id'] = network.id
+            except Network.DoesNotExist:
+                pass
+        
+        return JsonResponse(result)
 
 class ShareTargetView(LoginRequiredMixin, View):
     """
@@ -489,4 +557,146 @@ class TransactionActionsView(LoginRequiredMixin, View):
             'can_edit': is_owner or is_member,
             'can_delete': is_owner,  # Only owner can delete
         })
+
+
+class TransactionListView(LoginRequiredMixin, ListView):
+    """
+    Searchable list of transactions for a kiosk.
+    Supports filtering by network, type, date range, and search term.
+    """
+    model = Transaction
+    template_name = 'transactions/list.html'
+    context_object_name = 'transactions'
+    paginate_by = 20
+    login_url = '/auth/login/'
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Get active kiosk from URL params or user's default
+        kiosk_slug = request.GET.get('kiosk')
+        if kiosk_slug:
+            self.active_kiosk = get_object_or_404(Kiosk, slug=kiosk_slug)
+        else:
+            # Get user's kiosks
+            owned = Kiosk.objects.filter(owner=request.user, is_active=True).first()
+            member = Kiosk.objects.filter(
+                members__user=request.user, is_active=True
+            ).exclude(owner=request.user).first()
+            self.active_kiosk = owned or member
+        
+        # Check access
+        if self.active_kiosk:
+            is_owner = self.active_kiosk.owner == request.user
+            is_member = KioskMember.objects.filter(
+                kiosk=self.active_kiosk, user=request.user
+            ).exists()
+            
+            if not is_owner and not is_member:
+                raise Http404("Access denied")
+        
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_queryset(self):
+        if not self.active_kiosk:
+            return Transaction.objects.none()
+        
+        qs = Transaction.objects.filter(kiosk=self.active_kiosk)
+        
+        # Search filter - search across multiple fields
+        search = self.request.GET.get('search', '').strip()
+        if search:
+            # Build search query
+            search_q = (
+                Q(customer_phone__icontains=search) |
+                Q(transaction_ref__icontains=search) |
+                Q(notes__icontains=search) |
+                Q(network__name__icontains=search) |
+                Q(network__code__icontains=search) |
+                Q(recorded_by__email__icontains=search) |
+                Q(recorded_by__full_name__icontains=search)
+            )
+            
+            # If search looks like a number, also search amount
+            try:
+                search_amount = Decimal(search.replace(',', '').replace(' ', ''))
+                search_q |= Q(amount=search_amount)
+                # Also search for amounts containing the number
+                search_q |= Q(amount__gte=search_amount, amount__lt=search_amount + 1)
+            except (InvalidOperation, ValueError):
+                pass
+            
+            qs = qs.filter(search_q)
+        
+        # Network filter
+        network_id = self.request.GET.get('network')
+        if network_id:
+            qs = qs.filter(network_id=network_id)
+        
+        # Type filter
+        tx_type = self.request.GET.get('type')
+        if tx_type in ['DEPOSIT', 'WITHDRAWAL']:
+            qs = qs.filter(transaction_type=tx_type)
+        
+        # Date range filters
+        from datetime import datetime
+        date_filter = self.request.GET.get('date')
+        if date_filter == 'today':
+            qs = qs.today()
+        elif date_filter == 'week':
+            qs = qs.this_week()
+        elif date_filter == 'month':
+            qs = qs.this_month()
+        elif date_filter == 'custom':
+            # Custom date range
+            date_from = self.request.GET.get('date_from')
+            date_to = self.request.GET.get('date_to')
+            if date_from:
+                try:
+                    from_date = datetime.strptime(date_from, '%Y-%m-%d').date()
+                    qs = qs.filter(timestamp__date__gte=from_date)
+                except ValueError:
+                    pass
+            if date_to:
+                try:
+                    to_date = datetime.strptime(date_to, '%Y-%m-%d').date()
+                    qs = qs.filter(timestamp__date__lte=to_date)
+                except ValueError:
+                    pass
+        
+        return qs.order_by('-timestamp')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Transactions'
+        context['active_kiosk'] = self.active_kiosk
+        
+        # Available kiosks for user
+        context['owned_kiosks'] = Kiosk.objects.filter(
+            owner=self.request.user, is_active=True
+        )
+        context['member_kiosks'] = Kiosk.objects.filter(
+            members__user=self.request.user, is_active=True
+        ).exclude(owner=self.request.user)
+        
+        # Networks for filter
+        context['networks'] = Network.objects.filter(is_active=True)
+        
+        # Current filters
+        context['search'] = self.request.GET.get('search', '')
+        context['selected_network'] = self.request.GET.get('network', '')
+        context['selected_type'] = self.request.GET.get('type', '')
+        context['selected_date'] = self.request.GET.get('date', '')
+        context['date_from'] = self.request.GET.get('date_from', '')
+        context['date_to'] = self.request.GET.get('date_to', '')
+        
+        # Stats for this filtered view
+        if self.active_kiosk:
+            qs = self.get_queryset()
+            stats = qs.aggregate(
+                total_count=Count('id'),
+                total_amount=Coalesce(Sum('amount'), Decimal('0')),
+                total_profit=Coalesce(Sum('profit'), Decimal('0'))
+            )
+            context['stats'] = stats
+        
+        return context
 

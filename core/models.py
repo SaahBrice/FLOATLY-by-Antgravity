@@ -524,6 +524,12 @@ class Transaction(models.Model):
         validators=[phone_validator],
         help_text='Customer phone number if known'
     )
+    customer_name = models.CharField(
+        'customer name',
+        max_length=100,
+        blank=True,
+        help_text='Customer/sender name if known'
+    )
     transaction_ref = models.CharField(
         'transaction reference',
         max_length=100,
@@ -1180,3 +1186,78 @@ class FraudReport(models.Model):
             is_verified=True
         ).exists()
 
+
+# =============================================================================
+# FEEDBACK MODEL
+# =============================================================================
+
+class Feedback(models.Model):
+    """
+    User feedback for feature suggestions and bug reports.
+    """
+    
+    FEEDBACK_TYPES = [
+        ('FEATURE', 'Feature Suggestion'),
+        ('BUG', 'Bug Report'),
+        ('IMPROVEMENT', 'Improvement'),
+        ('OTHER', 'Other'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('NEW', 'New'),
+        ('REVIEWING', 'Under Review'),
+        ('PLANNED', 'Planned'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('COMPLETED', 'Completed'),
+        ('DECLINED', 'Declined'),
+    ]
+    
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='feedback_items'
+    )
+    
+    feedback_type = models.CharField(
+        max_length=20,
+        choices=FEEDBACK_TYPES,
+        default='FEATURE'
+    )
+    
+    title = models.CharField(
+        max_length=200,
+        help_text='Brief summary of your feedback'
+    )
+    
+    message = models.TextField(
+        help_text='Detailed description of your suggestion or issue'
+    )
+    
+    screenshot = models.ImageField(
+        upload_to='feedback/',
+        blank=True,
+        null=True,
+        help_text='Optional screenshot to help explain'
+    )
+    
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='NEW'
+    )
+    
+    admin_notes = models.TextField(
+        blank=True,
+        help_text='Internal notes for admin'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Feedback'
+        verbose_name_plural = 'Feedback'
+    
+    def __str__(self):
+        return f"{self.get_feedback_type_display()}: {self.title}"

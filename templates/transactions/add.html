@@ -10,11 +10,11 @@
     <!-- Header -->
     <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-white/10">
         <div class="flex items-center justify-between px-4 py-3">
-            <a href="{% url 'core:dashboard' %}" class="p-2 text-white/70 hover:text-white">
+            <button type="button" onclick="history.back()" class="p-2 text-white/70 hover:text-white">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
-            </a>
+            </button>
             <h1 class="text-lg font-semibold text-white">Add Transaction</h1>
             <div class="w-10"></div>
         </div>
@@ -31,6 +31,138 @@
             <div>
                 <p class="text-white font-medium">{{ kiosk.name }}</p>
                 <p class="text-white/50 text-sm">{{ kiosk.location|default:"No location" }}</p>
+            </div>
+        </div>
+        
+        <!-- Input Method Selector -->
+        <div class="mb-6">
+            <label class="block text-white/70 text-sm font-medium mb-3">Quick Input</label>
+            <div class="grid grid-cols-3 gap-3">
+                <!-- Image/Camera Button -->
+                <label class="cursor-pointer">
+                    <input type="file" 
+                           accept="image/*" 
+                           capture="environment"
+                           @change="handleImageUpload"
+                           class="hidden">
+                    <div class="flex flex-col items-center gap-2 p-4 bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl hover:bg-purple-500/30 transition">
+                        <div class="w-10 h-10 rounded-full bg-purple-500/30 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                        <span class="text-white text-sm font-medium">Image</span>
+                    </div>
+                </label>
+                
+                <!-- Voice Button -->
+                <button type="button"
+                        @click="showVoicePanel = true"
+                        class="flex flex-col items-center gap-2 p-4 bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl hover:bg-orange-500/30 transition">
+                    <div class="w-10 h-10 rounded-full bg-orange-500/30 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                    </div>
+                    <span class="text-white text-sm font-medium">Voice</span>
+                </button>
+                
+                <!-- Manual Button (scrolls to form) -->
+                <button type="button"
+                        @click="document.getElementById('id_amount').focus()"
+                        class="flex flex-col items-center gap-2 p-4 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-xl hover:bg-blue-500/30 transition">
+                    <div class="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </div>
+                    <span class="text-white text-sm font-medium">Manual</span>
+                </button>
+            </div>
+        </div>
+        
+        <div x-show="showVoicePanel" 
+             x-transition
+             class="mb-6 p-4 bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-xl">
+            <div class="space-y-4">
+                <!-- Close Button -->
+                <div class="flex justify-end">
+                    <button type="button" 
+                            @click="showVoicePanel = false; voiceState = 'idle';"
+                            class="p-1 text-white/50 hover:text-white transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Instructions (always visible) -->
+                <div class="p-3 bg-white/5 rounded-lg">
+                    <p class="text-white/70 text-sm font-medium mb-2">Recording tip:</p>
+                    <p class="text-white/50 text-xs italic">"Today at 5pm I did a cashout to Saah Brice of 15,000 francs via MTN mobile money with the number 670202020"</p>
+                </div>
+                
+                <!-- Recording Controls -->
+                <div class="flex flex-col items-center gap-4">
+                    <!-- Timer -->
+                    <div x-show="voiceState === 'recording'" class="text-center">
+                        <p class="text-3xl font-bold text-red-400" x-text="recordingTime + 's'"></p>
+                        <p class="text-white/50 text-xs">Recording... (max 20s)</p>
+                    </div>
+                    
+                    <!-- Microphone Button -->
+                    <button type="button"
+                            @click="toggleRecording()"
+                            :class="{
+                                'bg-red-500 animate-pulse': voiceState === 'recording',
+                                'bg-orange-500 hover:bg-orange-600': voiceState !== 'recording'
+                            }"
+                            class="w-20 h-20 rounded-full flex items-center justify-center transition shadow-lg">
+                        <svg x-show="voiceState !== 'recording'" class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                        <svg x-show="voiceState === 'recording'" class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <rect x="6" y="6" width="12" height="12" rx="2" />
+                        </svg>
+                    </button>
+                    <p class="text-white/50 text-sm" x-text="voiceState === 'idle' ? 'Tap to record' : voiceState === 'recording' ? 'Tap to stop' : 'Recording ready'"></p>
+                    
+                    <!-- Playback Controls (after recording) -->
+                    <div x-show="voiceState === 'recorded'" class="flex items-center gap-4">
+                        <button type="button" 
+                                @click="playRecording()"
+                                class="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="text-white text-sm">Play</span>
+                        </button>
+                        <button type="button" 
+                                @click="cancelRecording()"
+                                class="flex items-center gap-2 px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition">
+                            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            <span class="text-red-400 text-sm">Redo</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div x-show="voiceState === 'recorded'" class="flex gap-3 w-full">
+                        <button type="button" 
+                                @click="showVoicePanel = false; voiceState = 'idle';"
+                                class="flex-1 py-3 bg-white/10 rounded-xl text-white/70 hover:bg-white/20 transition">
+                            Cancel
+                        </button>
+                        <button type="button" 
+                                @click="sendVoiceRecording()"
+                                class="flex-1 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white font-medium hover:opacity-90 transition">
+                            🚀 Send to REEPLS AI
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -192,6 +324,16 @@
                 </button>
                 
                 <div x-show="showOptional" x-transition class="space-y-4 mt-4">
+                    <!-- Transaction Date/Time -->
+                    <div>
+                        <label for="id_timestamp" class="block text-white/70 text-sm font-medium mb-2">Transaction Date & Time</label>
+                        <input type="datetime-local" 
+                               name="timestamp" 
+                               id="id_timestamp"
+                               class="form-input">
+                        <p class="text-white/40 text-xs mt-1">Leave empty for current time</p>
+                    </div>
+                    
                     <!-- Customer Phone -->
                     <div>
                         <label for="id_customer_phone" class="block text-white/70 text-sm font-medium mb-2">Customer Phone</label>
@@ -208,6 +350,17 @@
                                hx-vals='{"phone": this.value}'>
                         <!-- Blacklist Warning Container -->
                         <div id="phone-warning" class="mt-2"></div>
+                    </div>
+                    
+                    <!-- Customer Name -->
+                    <div>
+                        <label for="id_customer_name" class="block text-white/70 text-sm font-medium mb-2">Customer Name</label>
+                        <input type="text" 
+                               name="customer_name" 
+                               id="id_customer_name"
+                               value="{{ form.customer_name.value|default:'' }}"
+                               placeholder="Sender/recipient name"
+                               class="form-input">
                     </div>
                     
                     <!-- Transaction Reference -->
@@ -254,54 +407,15 @@
             </button>
         </form>
         
-        <!-- Alternative Input Methods -->
-        <div class="mt-8 pt-6 border-t border-white/10">
-            <p class="text-white/40 text-sm text-center mb-4">Or import from:</p>
-            <div class="flex justify-center gap-4">
-                <!-- Camera/Photo -->
-                <label class="cursor-pointer">
-                    <input type="file" 
-                           accept="image/*" 
-                           capture="environment"
-                           @change="handleImageUpload($event)"
-                           class="hidden">
-                    <div class="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition">
-                        <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                        </div>
-                        <span class="text-white/70 text-sm">Photo</span>
-                    </div>
-                </label>
-                
-                <!-- Gallery -->
-                <label class="cursor-pointer">
-                    <input type="file" 
-                           accept="image/*"
-                           @change="handleImageUpload($event)"
-                           class="hidden">
-                    <div class="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition">
-                        <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <span class="text-white/70 text-sm">Gallery</span>
-                    </div>
-                </label>
-            </div>
-        </div>
-        
         <!-- Processing overlay -->
         <div x-show="processing" 
              x-transition
+             x-init="$watch('processing', value => { if(value) startFunnyMessages(); else stopFunnyMessages(); })"
              class="fixed inset-0 z-50 bg-slate-900/90 flex items-center justify-center">
-            <div class="text-center">
+            <div class="text-center px-4">
                 <div class="w-16 h-16 mx-auto mb-4 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-white font-medium">Processing image...</p>
-                <p class="text-white/50 text-sm">AI is extracting transaction data</p>
+                <p class="text-white font-medium text-lg">REEPLS AI is extracting...</p>
+                <p class="text-white/50 text-sm mt-2 h-6" x-text="funnyMessage"></p>
             </div>
         </div>
     </main>
@@ -309,6 +423,25 @@
 
 <script>
 function transactionForm() {
+    // Funny loading messages
+    const funnyMessages = [
+        "I'm cooking it...",
+        "I lost it on the way...",
+        "Asking my father how to do it...",
+        "Getting my partner's permission...",
+        "Sorry it's weather for bro here...",
+        "Almost there...",
+        "Grab a beer while I handle this...",
+        "Let me check with my ancestors first...",
+        "The network is doing wayo...",
+        "Even Elon Musk can't make this faster...",
+        "Patience na virtue my friend...",
+        "REEPLS dey chop the data...",
+        "I'm not lazy, I'm energy efficient...",
+        "Loading at African time...",
+        "The spirits are communicating...",
+    ];
+    
     return {
         transactionType: '{{ form.transaction_type.value|default:"DEPOSIT" }}',
         networkId: '{{ form.network.value|default:"" }}',
@@ -319,7 +452,208 @@ function transactionForm() {
         processing: false,
         debounceTimer: null,
         
+        // Voice recording state
+        showVoicePanel: false,
+        voiceState: 'idle', // idle, recording, recorded
+        recordingTime: 0,
+        recordingTimer: null,
+        mediaRecorder: null,
+        audioChunks: [],
+        audioBlob: null,
+        audioUrl: null,
+        audioPlayer: null,
+        
+        // Funny message state
+        funnyMessage: '',
+        funnyMessageTimer: null,
+        funnyMessageIndex: 0,
+        
+        startFunnyMessages() {
+            this.funnyMessageIndex = 0;
+            this.funnyMessage = funnyMessages[0];
+            this.funnyMessageTimer = setInterval(() => {
+                this.funnyMessageIndex = (this.funnyMessageIndex + 1) % funnyMessages.length;
+                this.funnyMessage = funnyMessages[this.funnyMessageIndex];
+            }, 2000);
+        },
+        
+        stopFunnyMessages() {
+            if (this.funnyMessageTimer) {
+                clearInterval(this.funnyMessageTimer);
+                this.funnyMessageTimer = null;
+            }
+        },
+        
+        // Voice recording methods
+        async toggleRecording() {
+            if (this.voiceState === 'recording') {
+                this.stopRecording();
+            } else {
+                await this.startRecording();
+            }
+        },
+        
+        async startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                this.mediaRecorder = new MediaRecorder(stream);
+                this.audioChunks = [];
+                
+                this.mediaRecorder.ondataavailable = (e) => {
+                    this.audioChunks.push(e.data);
+                };
+                
+                this.mediaRecorder.onstop = () => {
+                    this.audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                    this.audioUrl = URL.createObjectURL(this.audioBlob);
+                    this.voiceState = 'recorded';
+                    stream.getTracks().forEach(track => track.stop());
+                };
+                
+                this.mediaRecorder.start();
+                this.voiceState = 'recording';
+                this.recordingTime = 0;
+                
+                // Start countdown timer (max 20s)
+                this.recordingTimer = setInterval(() => {
+                    this.recordingTime++;
+                    if (this.recordingTime >= 20) {
+                        this.stopRecording();
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                window.showToast && showToast('Could not access microphone. Please allow microphone access.', 'error');
+            }
+        },
+        
+        stopRecording() {
+            if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+                this.mediaRecorder.stop();
+            }
+            if (this.recordingTimer) {
+                clearInterval(this.recordingTimer);
+                this.recordingTimer = null;
+            }
+        },
+        
+        playRecording() {
+            if (this.audioUrl) {
+                if (this.audioPlayer) {
+                    this.audioPlayer.pause();
+                }
+                this.audioPlayer = new Audio(this.audioUrl);
+                this.audioPlayer.play();
+            }
+        },
+        
+        cancelRecording() {
+            if (this.audioPlayer) {
+                this.audioPlayer.pause();
+            }
+            if (this.audioUrl) {
+                URL.revokeObjectURL(this.audioUrl);
+            }
+            this.audioBlob = null;
+            this.audioUrl = null;
+            this.voiceState = 'idle';
+            this.recordingTime = 0;
+        },
+        
+        async sendVoiceRecording() {
+            if (!this.audioBlob) return;
+            
+            this.showVoicePanel = false;
+            this.processing = true;
+            
+            try {
+                const formData = new FormData();
+                formData.append('audio', this.audioBlob, 'recording.webm');
+                
+                const response = await fetch('{% url "core:process_voice" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to process voice');
+                }
+                
+                const data = await response.json();
+                
+                // Check if we got data
+                const hasData = data.network_id || data.amount || data.transaction_type;
+                
+                if (!hasData) {
+                    window.showToast && showToast('Could not understand voice recording. Try speaking more clearly.', 'error');
+                    return;
+                }
+                
+                // Fill form with extracted data
+                let fieldsUpdated = 0;
+                
+                if (data.network_id) {
+                    this.networkId = data.network_id;
+                    fieldsUpdated++;
+                }
+                if (data.transaction_type) {
+                    this.transactionType = data.transaction_type;
+                    fieldsUpdated++;
+                }
+                if (data.amount) {
+                    this.amount = data.amount;
+                    fieldsUpdated++;
+                }
+                if (data.customer_phone) {
+                    document.getElementById('id_customer_phone').value = data.customer_phone;
+                    fieldsUpdated++;
+                }
+                if (data.customer_name) {
+                    document.getElementById('id_customer_name').value = data.customer_name;
+                    fieldsUpdated++;
+                }
+                if (data.transaction_ref) {
+                    document.getElementById('id_transaction_ref').value = data.transaction_ref;
+                    fieldsUpdated++;
+                }
+                
+                // Calculate profit with new values
+                if (this.amount && this.networkId) {
+                    await this.calculateProfit();
+                }
+                
+                window.showToast && showToast(`🎤 Voice processed! ${fieldsUpdated} fields extracted.`, 'success');
+                
+            } catch (error) {
+                console.error('Error processing voice:', error);
+                window.showToast && showToast('Failed to process voice recording. Please try again.', 'error');
+            } finally {
+                this.processing = false;
+                this.cancelRecording();
+                this.voiceState = 'idle';
+            }
+        },
+        
         init() {
+            // Initialize timestamp to current LOCAL datetime
+            const now = new Date();
+            // Format as YYYY-MM-DDTHH:MM in local timezone (not UTC!)
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            
+            const timestampField = document.getElementById('id_timestamp');
+            if (timestampField && !timestampField.value) {
+                timestampField.value = localDateTime;
+            }
+            
             // If we have initial values, calculate profit
             if (this.amount && this.networkId) {
                 this.calculateProfit();
@@ -389,43 +723,121 @@ function transactionForm() {
                 
                 const data = await response.json();
                 
+                // Check if we actually extracted any useful data
+                const hasData = data.network_id || data.amount || data.transaction_type;
+                
+                if (!hasData) {
+                    // No data extracted - show clear error
+                    window.showToast && showToast('Could not extract transaction data from this image. Try a clearer receipt photo.', 'error');
+                    return;
+                }
+                
                 // Fill form with extracted data
+                let fieldsUpdated = 0;
+                
                 if (data.network_id) {
                     this.networkId = data.network_id;
+                    fieldsUpdated++;
                 }
                 if (data.transaction_type) {
                     this.transactionType = data.transaction_type;
+                    fieldsUpdated++;
                 }
                 if (data.amount) {
                     this.amount = data.amount;
+                    fieldsUpdated++;
                 }
                 if (data.customer_phone) {
                     document.getElementById('id_customer_phone').value = data.customer_phone;
+                    fieldsUpdated++;
+                }
+                if (data.customer_name) {
+                    document.getElementById('id_customer_name').value = data.customer_name;
+                    fieldsUpdated++;
                 }
                 if (data.transaction_ref) {
                     document.getElementById('id_transaction_ref').value = data.transaction_ref;
+                    fieldsUpdated++;
                 }
                 
                 // Calculate profit with new values
-                await this.calculateProfit();
+                if (this.amount && this.networkId) {
+                    await this.calculateProfit();
+                }
                 
-                // Show confidence
-                if (data.confidence < 0.5) {
-                    window.showToast && showToast('Low confidence extraction. Please verify the data.', 'warning');
+                // Show appropriate message based on confidence and fields extracted
+                if (data.confidence && data.confidence < 0.5) {
+                    window.showToast && showToast(`Low confidence extraction (${fieldsUpdated} fields). Please verify all data carefully.`, 'warning');
+                } else if (fieldsUpdated < 3) {
+                    window.showToast && showToast(`Partial extraction (${fieldsUpdated} fields found). Please complete missing fields.`, 'warning');
                 } else {
-                    window.showToast && showToast('Receipt processed! Please verify the data.', 'success');
+                    window.showToast && showToast(`Receipt processed! ${fieldsUpdated} fields extracted. Please verify.`, 'success');
                 }
                 
             } catch (error) {
                 console.error('Error processing image:', error);
-                window.showToast && showToast('Failed to process image. Please enter manually.', 'error');
+                window.showToast && showToast('Failed to process image. Please enter data manually.', 'error');
             } finally {
                 this.processing = false;
+                // Reset file input so same file can be selected again
+                event.target.value = '';
             }
         },
         
-        handleSubmit(event) {
+        async handleSubmit(event) {
+            event.preventDefault();
             this.submitting = true;
+            
+            try {
+                const form = event.target;
+                const formData = new FormData(form);
+                
+                const response = await fetch(form.action || window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show success toast
+                    window.showToast && showToast(`✅ Transaction saved! Profit: ${data.profit} CFA`, 'success');
+                    
+                    // Clear the form for next entry
+                    this.amount = '';
+                    this.profit = '';
+                    this.transactionType = 'DEPOSIT';
+                    
+                    // Clear optional fields
+                    const optionalFields = ['id_customer_phone', 'id_customer_name', 'id_transaction_ref', 'id_notes'];
+                    optionalFields.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = '';
+                    });
+                    
+                    // Focus back on amount for quick next entry
+                    setTimeout(() => {
+                        document.getElementById('id_amount').focus();
+                    }, 100);
+                } else {
+                    // Show error
+                    window.showToast && showToast(data.error || 'Failed to save transaction', 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                window.showToast && showToast('Error saving transaction. Please try again.', 'error');
+            } finally {
+                this.submitting = false;
+            }
+        },
+        
+        clearForm() {
+            this.amount = '';
+            this.profit = '';
+            this.transactionType = 'DEPOSIT';
         }
     }
 }

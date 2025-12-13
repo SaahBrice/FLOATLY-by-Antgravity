@@ -11,6 +11,7 @@ from . import kiosk_views
 from . import notification_views
 from . import team_views
 from . import fraud_views
+from . import feedback_views
 
 app_name = 'core'
 
@@ -50,6 +51,9 @@ urlpatterns = [
     # Kiosk switching (HTMX)
     path('kiosk/<slug:slug>/switch/', dashboard_views.KioskSwitchView.as_view(), name='kiosk_switch'),
     
+    # Dashboard chart data API
+    path('api/chart-data/', dashboard_views.ChartDataView.as_view(), name='chart_data'),
+    
     # Kiosk management
     path('kiosk/<slug:slug>/edit/', kiosk_views.EditKioskView.as_view(), name='edit_kiosk'),
     path('kiosk/<slug:slug>/delete/', kiosk_views.DeleteKioskView.as_view(), name='delete_kiosk'),
@@ -57,6 +61,9 @@ urlpatterns = [
     # =========================================================================
     # TRANSACTIONS
     # =========================================================================
+    
+    # Transaction list/search
+    path('transactions/', transaction_views.TransactionListView.as_view(), name='transactions'),
     
     # Add transaction
     path('transactions/add/', transaction_views.AddTransactionView.as_view(), name='add_transaction'),
@@ -72,6 +79,9 @@ urlpatterns = [
     
     # Receipt image processing (AI)
     path('transactions/process-receipt/', transaction_views.ProcessReceiptImageView.as_view(), name='process_receipt'),
+    
+    # Voice recording processing (AI)
+    path('transactions/process-voice/', transaction_views.ProcessVoiceView.as_view(), name='process_voice'),
     
     # PWA Share Target
     path('share/', transaction_views.ShareTargetView.as_view(), name='share_target'),
@@ -118,6 +128,12 @@ urlpatterns = [
     path('blacklist/', fraud_views.BlacklistView.as_view(), name='blacklist'),
     path('fraud/report/<int:pk>/', fraud_views.ReportDetailView.as_view(), name='fraud_detail'),
     path('api/check-phone/', fraud_views.CheckPhoneView.as_view(), name='check_phone'),
+    
+    # =========================================================================
+    # FEEDBACK
+    # =========================================================================
+    
+    path('feedback/', feedback_views.FeedbackSubmitView.as_view(), name='feedback'),
     
     # Include allauth URLs for email confirmation and social auth
     path('accounts/', include('allauth.urls')),
