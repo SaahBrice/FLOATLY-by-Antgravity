@@ -50,6 +50,9 @@ urlpatterns = [
     # Kiosk switching (HTMX)
     path('kiosk/<slug:slug>/switch/', dashboard_views.KioskSwitchView.as_view(), name='kiosk_switch'),
     
+    # Dashboard chart data API
+    path('api/chart-data/', dashboard_views.ChartDataView.as_view(), name='chart_data'),
+    
     # Kiosk management
     path('kiosk/<slug:slug>/edit/', kiosk_views.EditKioskView.as_view(), name='edit_kiosk'),
     path('kiosk/<slug:slug>/delete/', kiosk_views.DeleteKioskView.as_view(), name='delete_kiosk'),

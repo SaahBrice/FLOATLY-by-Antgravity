@@ -215,3 +215,137 @@ class KioskSwitchView(LoginRequiredMixin, View):
         }
         
         return render(request, 'core/partials/dashboard_content.html', context)
+
+
+class ChartDataView(LoginRequiredMixin, View):
+    """
+    API endpoint for dashboard chart data.
+    Returns JSON with daily stats for deposits, withdrawals, and profit.
+    """
+    login_url = '/auth/login/'
+    
+    def get(self, request):
+        from django.http import JsonResponse
+        from datetime import timedelta
+        import json
+        
+        user = request.user
+        kiosk_slug = request.GET.get('kiosk')
+        period = request.GET.get('period', '7')  # days
+        
+        # Get kiosk
+        if kiosk_slug:
+            kiosk = get_object_or_404(Kiosk, slug=kiosk_slug)
+        else:
+            owned = Kiosk.objects.filter(owner=user, is_active=True).first()
+            member = Kiosk.objects.filter(
+                members__user=user, is_active=True
+            ).exclude(owner=user).first()
+            kiosk = owned or member
+        
+        if not kiosk:
+            return JsonResponse({'error': 'No kiosk found'}, status=404)
+        
+        # Check access
+        is_owner = kiosk.owner == user
+        is_member = KioskMember.objects.filter(kiosk=kiosk, user=user).exists()
+        if not is_owner and not is_member:
+            return JsonResponse({'error': 'Access denied'}, status=403)
+        
+        # Calculate date range
+        try:
+            days = int(period)
+        except ValueError:
+            days = 7
+        
+        # Build data based on period
+        labels = []
+        deposits = []
+        withdrawals = []
+        profits = []
+        
+        if days == 1:
+            # Today - show hourly data
+            today = timezone.now().date()
+            transactions = Transaction.objects.filter(
+                kiosk=kiosk,
+                timestamp__date=today
+            )
+            
+            for hour in range(24):
+                hour_tx = transactions.filter(timestamp__hour=hour)
+                
+                hour_deposits = hour_tx.filter(transaction_type='DEPOSIT').aggregate(
+                    total=Sum('amount')
+                )['total'] or Decimal('0')
+                
+                hour_withdrawals = hour_tx.filter(transaction_type='WITHDRAWAL').aggregate(
+                    total=Sum('amount')
+                )['total'] or Decimal('0')
+                
+                hour_profit = hour_tx.aggregate(total=Sum('profit'))['total'] or Decimal('0')
+                
+                labels.append(f'{hour:02d}h')
+                deposits.append(float(hour_deposits))
+                withdrawals.append(float(hour_withdrawals))
+                profits.append(float(hour_profit))
+        else:
+            # Multi-day view - show daily data
+            end_date = timezone.now().date()
+            start_date = end_date - timedelta(days=days - 1)
+            
+            transactions = Transaction.objects.filter(
+                kiosk=kiosk,
+                timestamp__date__gte=start_date,
+                timestamp__date__lte=end_date
+            )
+            
+            current_date = start_date
+            while current_date <= end_date:
+                day_tx = transactions.filter(timestamp__date=current_date)
+                
+                day_deposits = day_tx.filter(transaction_type='DEPOSIT').aggregate(
+                    total=Sum('amount')
+                )['total'] or Decimal('0')
+                
+                day_withdrawals = day_tx.filter(transaction_type='WITHDRAWAL').aggregate(
+                    total=Sum('amount')
+                )['total'] or Decimal('0')
+                
+                day_profit = day_tx.aggregate(total=Sum('profit'))['total'] or Decimal('0')
+                
+                # Format label based on period
+                if days <= 7:
+                    labels.append(current_date.strftime('%a'))  # Mon, Tue...
+                elif days <= 30:
+                    labels.append(current_date.strftime('%d'))  # 01, 02...
+                else:
+                    labels.append(current_date.strftime('%d/%m'))  # 01/12...
+                
+                deposits.append(float(day_deposits))
+                withdrawals.append(float(day_withdrawals))
+                profits.append(float(day_profit))
+                
+                current_date += timedelta(days=1)
+        
+        # Summary stats
+        total_deposits = sum(deposits)
+        total_withdrawals = sum(withdrawals)
+        total_profit = sum(profits)
+        
+        return JsonResponse({
+            'labels': labels,
+            'datasets': {
+                'deposits': deposits,
+                'withdrawals': withdrawals,
+                'profits': profits,
+            },
+            'summary': {
+                'total_deposits': total_deposits,
+                'total_withdrawals': total_withdrawals,
+                'total_profit': total_profit,
+                'net_flow': total_deposits - total_withdrawals,
+            },
+            'period': days,
+            'kiosk': kiosk.name,
+        })
