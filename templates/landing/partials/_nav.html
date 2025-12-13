@@ -1,0 +1,71 @@
+<!-- Navigation Partial -->
+<nav class="fixed w-full top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200/50 dark:border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="flex items-center justify-between h-16 md:h-20">
+            <!-- Logo -->
+            <a href="/" class="flex items-center gap-2.5 group">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 via-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:shadow-violet-500/50 transition-all duration-300 group-hover:scale-110">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <span class="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300">Floatly</span>
+            </a>
+            
+            <!-- Desktop Nav -->
+            <div class="hidden lg:flex items-center gap-8">
+                <a href="#features" class="text-slate-600 dark:text-white/70 hover:text-violet-600 dark:hover:text-violet-400 font-medium transition" x-text="$store.i18n.t('nav_features')">Features</a>
+                <a href="#ai" class="text-slate-600 dark:text-white/70 hover:text-violet-600 dark:hover:text-violet-400 font-medium transition">AI Features</a>
+                <a href="#pricing" class="text-slate-600 dark:text-white/70 hover:text-violet-600 dark:hover:text-violet-400 font-medium transition">Pricing</a>
+            </div>
+            
+            <!-- Right Controls -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Theme Toggle -->
+                <button @click="$store.theme.toggle()" 
+                        class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-600 dark:text-white/70 hover:bg-violet-100 dark:hover:bg-violet-500/20 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-300">
+                    <svg x-show="$store.theme.isDark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <svg x-show="!$store.theme.isDark" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+                
+                <!-- Language Toggle -->
+                <div class="hidden sm:flex items-center bg-slate-100 dark:bg-white/10 rounded-xl p-1">
+                    <button @click="$store.i18n.setLang('fr')" 
+                            :class="$store.i18n.lang === 'fr' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-white/50'"
+                            class="px-3 py-1.5 text-sm font-medium rounded-lg transition">🇫🇷</button>
+                    <button @click="$store.i18n.setLang('en')" 
+                            :class="$store.i18n.lang === 'en' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-white/50'"
+                            class="px-3 py-1.5 text-sm font-medium rounded-lg transition">🇬🇧</button>
+                </div>
+                
+                <!-- Auth -->
+                <a href="{% url 'core:login' %}" class="hidden md:block text-sm font-semibold text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white px-4 py-2" x-text="$store.i18n.t('nav_login')">Log In</a>
+                <a href="{% url 'core:register' %}" 
+                   class="hidden md:flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all duration-300 hover:-translate-y-0.5">
+                    <span x-text="$store.i18n.t('nav_signup')">Get Started</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                </a>
+                
+                <!-- Mobile Menu -->
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="lg:hidden w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center">
+                    <svg x-show="!mobileMenuOpen" class="w-5 h-5 text-slate-600 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    <svg x-show="mobileMenuOpen" x-cloak class="w-5 h-5 text-slate-600 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mobile Menu -->
+    <div x-show="mobileMenuOpen" x-transition x-cloak class="lg:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-white/10 p-4 space-y-2">
+        <a href="#features" class="block py-3 px-4 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white font-medium">Features</a>
+        <a href="#ai" class="block py-3 px-4 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white font-medium">AI Features</a>
+        <div class="flex gap-2 pt-2">
+            <a href="{% url 'core:login' %}" class="flex-1 py-3 text-center rounded-xl border border-slate-200 dark:border-white/20 text-slate-700 dark:text-white font-medium">Log In</a>
+            <a href="{% url 'core:register' %}" class="flex-1 py-3 text-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-bold">Get Started</a>
+        </div>
+    </div>
+</nav>
