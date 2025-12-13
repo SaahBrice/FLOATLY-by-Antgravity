@@ -1,0 +1,32 @@
+<!-- Standardized Sticky Header with Back Navigation -->
+<!-- Usage: {% include 'partials/_page_header.html' with title="Page Title" subtitle="Optional" back_url=url_name show_add=True add_url=add_url %} -->
+
+<header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-xl border-b border-white/10">
+    <div class="flex items-center justify-between px-4 py-3">
+        <!-- Back Button -->
+        <a href="{{ back_url|default:'core:dashboard'|url }}" class="p-2 -ml-2 text-white/70 hover:text-white transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+        </a>
+        
+        <!-- Title -->
+        <div class="text-center flex-1">
+            <h1 class="text-lg font-bold text-white">{{ title }}</h1>
+            {% if subtitle %}
+            <p class="text-white/50 text-xs">{{ subtitle }}</p>
+            {% endif %}
+        </div>
+        
+        <!-- Action Button -->
+        {% if show_add and add_url %}
+        <a href="{{ add_url }}" class="p-2 -mr-2 text-primary-400 hover:text-primary-300 transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+        </a>
+        {% else %}
+        <div class="w-10"></div>
+        {% endif %}
+    </div>
+</header>
