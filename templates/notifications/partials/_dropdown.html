@@ -5,8 +5,7 @@
         <a href="{% if notification.action_url %}{{ notification.action_url }}{% else %}{% url 'core:notifications' %}{% endif %}"
            class="block p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition
                   {% if not notification.is_read %}bg-violet-50/50 dark:bg-violet-500/5{% endif %}"
-           hx-post="{% url 'core:mark_notification_read' pk=notification.id %}"
-           hx-swap="none">
+           onclick="fetch('{% url 'core:mark_notification_read' pk=notification.id %}', {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}'}})">
             <div class="flex gap-3">
                 <!-- Mini Icon -->
                 <div class="flex-shrink-0">

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - {{ active_kiosk.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen pb-24">
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-white/10">
+        <div class="flex items-center justify-between px-4 py-3">
+            <a href="{% url 'core:dashboard' %}" class="p-2 text-white/70 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <h1 class="text-lg font-semibold text-white">📊 Reports</h1>
+            <div class="w-10"></div>
+        </div>
+    </header>
+    
+    <main class="p-4 max-w-lg mx-auto space-y-4">
+        
+        {% if no_kiosks %}
+        <!-- No kiosks message -->
+        <div class="text-center py-12">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/10 flex items-center justify-center">
+                <svg class="w-8 h-8 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <p class="text-white/70">No kiosks found</p>
+            <p class="text-white/50 text-sm mt-1">Create a kiosk to start seeing reports</p>
+        </div>
+        {% else %}
+        
+        <!-- Kiosk selector -->
+        {% if owned_kiosks.count > 1 or member_kiosks.count > 0 %}
+        <div class="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+            {% for kiosk in owned_kiosks %}
+            <a href="?kiosk={{ kiosk.slug }}" 
+               class="px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition
+                      {% if kiosk.slug == active_kiosk.slug %}bg-primary-500 text-white{% else %}bg-white/10 text-white/70 hover:bg-white/20{% endif %}">
+                {{ kiosk.name }}
+            </a>
+            {% endfor %}
+            {% for kiosk in member_kiosks %}
+            <a href="?kiosk={{ kiosk.slug }}" 
+               class="px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition
+                      {% if kiosk.slug == active_kiosk.slug %}bg-primary-500 text-white{% else %}bg-white/10 text-white/70 hover:bg-white/20{% endif %}">
+                {{ kiosk.name }}
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Today's report quick link -->
+        <a href="{% url 'core:report_detail' date_str=today %}?kiosk={{ active_kiosk.slug }}" 
+           class="block p-5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg hover:shadow-xl transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-white/80 text-sm">View Today's Report</p>
+                    <p class="text-white font-bold text-lg mt-1">{{ active_kiosk.name }}</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </div>
+        </a>
+        
+        <!-- Report history -->
+        <div class="mt-6">
+            <h2 class="text-white font-semibold mb-3">Report History</h2>
+            
+            {% if reports %}
+            <div class="space-y-2">
+                {% for report in reports %}
+                <a href="{% url 'core:report_detail' date_str=report.date|date:'Y-m-d' %}?kiosk={{ active_kiosk.slug }}"
+                   class="block p-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white font-medium">{{ report.date|date:"l, M d" }}</p>
+                            <p class="text-white/50 text-sm">
+                                {{ report.transaction_count }} transactions • 
+                                Profit: {{ report.total_profit|floatformat:0 }} CFA
+                            </p>
+                        </div>
+                        {% if report.has_low_balance_alert %}
+                        <span class="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-xs">⚠️ Alert</span>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <p class="text-white/50">No reports yet</p>
+                <p class="text-white/40 text-sm mt-1">Reports are generated daily at 9pm</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

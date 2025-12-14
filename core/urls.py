@@ -15,6 +15,7 @@ from . import fraud_views
 from . import feedback_views
 from . import daily_balance_views
 from . import commission_views
+from . import report_views
 
 app_name = 'core'
 
@@ -154,6 +155,14 @@ urlpatterns = [
     # =========================================================================
     
     path('feedback/', feedback_views.FeedbackSubmitView.as_view(), name='feedback'),
+    
+    # =========================================================================
+    # REPORTS
+    # =========================================================================
+    
+    path('reports/', report_views.ReportListView.as_view(), name='report_list'),
+    path('reports/<str:date_str>/', report_views.ReportDetailView.as_view(), name='report_detail'),
+    path('reports/<str:date_str>/regenerate/', report_views.RegenerateReportView.as_view(), name='report_regenerate'),
     
     # Include allauth URLs for email confirmation and social auth
     path('accounts/', include('allauth.urls')),

@@ -254,6 +254,12 @@
                     </svg>
                     Blacklist
                 </a>
+                <a href="{% url 'core:report_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/60 hover:bg-white/5 hover:text-white transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Reports
+                </a>
                 
                 <div class="pt-4 mt-4 border-t border-white/10">
                     <a href="{% url 'core:notification_preferences' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/60 hover:bg-white/5 hover:text-white transition">
@@ -311,60 +317,11 @@
         {% include 'core/partials/dashboard_content.html' %}
     </main>
     
-    <!-- Floating Action Button -->
-    {% if active_kiosk %}
-    <div class="fixed bottom-24 lg:bottom-8 right-4 z-30">
-        <div class="relative" x-data="{ fabOpen: false }">
-            <!-- FAB Menu -->
-            <div x-show="fabOpen"
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-100"
-                 x-transition:leave-start="opacity-100 scale-100"
-                 x-transition:leave-end="opacity-0 scale-95"
-                 @click.away="fabOpen = false"
-                 class="absolute bottom-16 right-0 mb-2 space-y-2"
-                 style="display: none;">
-                
-                <!-- Cash In -->
-                <a href="{% url 'core:add_transaction' %}?type=DEPOSIT"
-                   class="flex items-center gap-3 whitespace-nowrap bg-green-500 text-white px-4 py-3 rounded-xl shadow-lg hover:bg-green-600 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                    </svg>
-                    Cash In (Deposit)
-                </a>
-                
-                <!-- Cash Out -->
-                <a href="{% url 'core:add_transaction' %}?type=WITHDRAWAL"
-                   class="flex items-center gap-3 whitespace-nowrap bg-orange-500 text-white px-4 py-3 rounded-xl shadow-lg hover:bg-orange-600 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                    </svg>
-                    Cash Out (Withdrawal)
-                </a>
-            </div>
-            
-            <!-- Main FAB -->
-            <button @click="fabOpen = !fabOpen"
-                    class="w-14 h-14 rounded-full bg-gradient-to-r from-primary-500 to-purple-600 text-white shadow-lg shadow-primary-500/30 flex items-center justify-center transition-transform hover:scale-105"
-                    :class="{'rotate-45': fabOpen}">
-                <svg class="w-7 h-7 transition-transform" 
-                     :class="{'rotate-45': fabOpen}"
-                     fill="none" 
-                     stroke="currentColor" 
-                     viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-            </button>
-        </div>
-    </div>
-    {% endif %}
     
+
     <!-- Mobile Bottom Navigation -->
     <nav class="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur border-t border-white/10 lg:hidden z-40">
-        <div class="flex items-center justify-around py-2">
+        <div class="flex items-center justify-around py-2" x-data="{ quickMenuOpen: false }">
             <!-- Settings (leftmost) -->
             <a href="{% url 'core:notification_preferences' %}" class="flex flex-col items-center gap-1 px-3 py-2 text-white/50 hover:text-white">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -380,16 +337,73 @@
                 </svg>
                 <span class="text-xs">Blacklist</span>
             </a>
-            <!-- Start Day (CENTER - prominent) -->
-            <a href="{% url 'core:start_day' %}" 
-               class="flex flex-col items-center gap-1 -mt-4">
-                <div class="w-14 h-14 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-500/40 flex items-center justify-center">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
+            
+            <!-- Quick Actions (CENTER - + button with popup) -->
+            <div class="relative flex flex-col items-center gap-1 -mt-4">
+                <!-- Popup Menu (Horizontal) -->
+                <div x-show="quickMenuOpen"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-90"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-90"
+                     @click.away="quickMenuOpen = false"
+                     class="absolute bottom-16 left-1/2 -translate-x-1/2 mb-2 flex items-center gap-4 bg-slate-800/95 backdrop-blur-xl px-5 py-4 rounded-2xl border border-white/10 shadow-2xl"
+                     style="display: none;">
+                    
+                    <!-- Report Scam -->
+                    <a href="{% url 'core:fraud_report' %}"
+                       class="flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-red-500/20 transition"
+                       title="Report Scam">
+                        <div class="w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <span class="text-[10px] text-white font-medium whitespace-nowrap">Report Scam</span>
+                    </a>
+                    
+                    <!-- Start Day -->
+                    <a href="{% url 'core:start_day' %}"
+                       class="flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-amber-500/20 transition"
+                       title="Start Day">
+                        <div class="w-12 h-12 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-lg">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </div>
+                        <span class="text-[10px] text-white font-medium whitespace-nowrap">Start Day</span>
+                    </a>
+                    
+                    <!-- Add Transaction -->
+                    <a href="{% url 'core:add_transaction' %}"
+                       class="flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-green-500/20 transition"
+                       title="Add Transaction">
+                        <div class="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                        </div>
+                        <span class="text-[10px] text-white font-medium whitespace-nowrap">Add Transaction</span>
+                    </a>
                 </div>
-                <span class="text-xs text-amber-400 font-medium">Start Day</span>
-            </a>
+                
+                <!-- Main + Button -->
+                <button @click="quickMenuOpen = !quickMenuOpen"
+                        class="w-14 h-14 rounded-full bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-purple-500/40 flex items-center justify-center transition-transform hover:scale-105"
+                        :class="{'rotate-45': quickMenuOpen}">
+                    <svg class="w-7 h-7 transition-transform duration-200" 
+                         :class="{'rotate-45': quickMenuOpen}"
+                         fill="none" 
+                         stroke="currentColor" 
+                         viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
+                <span class="text-xs text-violet-400 font-medium">Actions</span>
+            </div>
+            
             <!-- Transactions -->
             <a href="{% url 'core:transactions' %}" class="flex flex-col items-center gap-1 px-3 py-2 text-white/50 hover:text-white">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -608,6 +622,94 @@ if (performance && performance.getEntriesByType) {
         window.location.reload();
     }
 }
+
+// Transaction Details Modal
+function showTransactionDetails(tx) {
+    const modal = document.getElementById('transactionDetailModal');
+    const content = document.getElementById('transactionDetailContent');
+    
+    content.innerHTML = `
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
+                 style="background-color: ${tx.networkColor}20;">
+                ${tx.type === 'Cash In' ? '📥' : '📤'}
+            </div>
+            <div>
+                <p class="text-white font-bold text-xl">${tx.type}</p>
+                <p class="text-white/50 text-sm">${tx.network}</p>
+            </div>
+        </div>
+        
+        <div class="space-y-4">
+            <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                <span class="text-white/60">Amount</span>
+                <span class="text-white font-bold text-lg">${tx.amount} CFA</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-green-500/10 rounded-xl">
+                <span class="text-green-400/80">Profit</span>
+                <span class="text-green-400 font-bold">+${tx.profit} CFA</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                <span class="text-white/60">Customer</span>
+                <span class="text-white">${tx.customerPhone}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                <span class="text-white/60">Reference</span>
+                <span class="text-white">${tx.reference}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                <span class="text-white/60">Date & Time</span>
+                <span class="text-white text-sm">${tx.timestamp}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                <span class="text-white/60">Created By</span>
+                <span class="text-white">${tx.createdBy}</span>
+            </div>
+            ${tx.notes !== '-' ? `
+            <div class="p-3 bg-white/5 rounded-xl">
+                <span class="text-white/60 block mb-1">Notes</span>
+                <span class="text-white text-sm">${tx.notes}</span>
+            </div>
+            ` : ''}
+        </div>
+        
+        <div class="mt-6 text-center text-white/30 text-xs">
+            Transaction ID: #${tx.id}
+        </div>
+    `;
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeTransactionModal() {
+    const modal = document.getElementById('transactionDetailModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
 </script>
+
+<!-- Transaction Detail Modal -->
+<div id="transactionDetailModal" 
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm"
+     onclick="if(event.target === this) closeTransactionModal()">
+    <div class="bg-slate-800 rounded-3xl border border-white/10 w-[90%] max-w-md max-h-[80vh] overflow-y-auto shadow-2xl m-4">
+        <!-- Header -->
+        <div class="sticky top-0 bg-slate-800 border-b border-white/10 p-4 flex items-center justify-between">
+            <h3 class="text-white font-bold text-lg">Transaction Details</h3>
+            <button onclick="closeTransactionModal()" class="p-2 text-white/50 hover:text-white transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Content -->
+        <div id="transactionDetailContent" class="p-4">
+            <!-- Filled by JavaScript -->
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
