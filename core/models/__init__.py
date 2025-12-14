@@ -29,6 +29,7 @@ from .daily_balance import DailyOpeningBalance, NetworkFloatBalance
 from .notification import Notification, PushSubscription, NotificationPreference
 from .invitation import KioskInvitation
 from .fraud import FraudReport, Feedback
+from .report import DailyReport
 
 
 # Define __all__ for explicit exports
@@ -66,4 +67,7 @@ __all__ = [
     # Fraud & Feedback
     'FraudReport',
     'Feedback',
+    
+    # Reports
+    'DailyReport',
 ]
