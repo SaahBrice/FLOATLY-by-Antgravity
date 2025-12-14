@@ -7,6 +7,7 @@ from . import views
 from . import auth_views
 from . import dashboard_views
 from . import transaction_views
+from . import ai_views
 from . import kiosk_views
 from . import notification_views
 from . import team_views
@@ -78,10 +79,10 @@ urlpatterns = [
     path('transactions/calculate-profit/', transaction_views.CalculateProfitView.as_view(), name='calculate_profit'),
     
     # Receipt image processing (AI)
-    path('transactions/process-receipt/', transaction_views.ProcessReceiptImageView.as_view(), name='process_receipt'),
+    path('transactions/process-receipt/', ai_views.ProcessReceiptImageView.as_view(), name='process_receipt'),
     
     # Voice recording processing (AI)
-    path('transactions/process-voice/', transaction_views.ProcessVoiceView.as_view(), name='process_voice'),
+    path('transactions/process-voice/', ai_views.ProcessVoiceView.as_view(), name='process_voice'),
     
     # PWA Share Target
     path('share/', transaction_views.ShareTargetView.as_view(), name='share_target'),
