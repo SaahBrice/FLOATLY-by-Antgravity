@@ -614,6 +614,94 @@ if (performance && performance.getEntriesByType) {
         window.location.reload();
     }
 }
+
+// Transaction Details Modal
+function showTransactionDetails(tx) {
+    const modal = document.getElementById('transactionDetailModal');
+    const content = document.getElementById('transactionDetailContent');
+    
+    content.innerHTML = `
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
+                 style="background-color: ${tx.networkColor}20;">
+                ${tx.type === 'Cash In' ? '📥' : '📤'}
+            </div>
+            <div>
+                <p class="text-white font-bold text-xl">${tx.type}</p>
+                <p class="text-white/50 text-sm">${tx.network}</p>
+            </div>
+        </div>
+        
+        <div class="space-y-4">
+            <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                <span class="text-white/60">Amount</span>
+                <span class="text-white font-bold text-lg">${tx.amount} CFA</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-green-500/10 rounded-xl">
+                <span class="text-green-400/80">Profit</span>
+                <span class="text-green-400 font-bold">+${tx.profit} CFA</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                <span class="text-white/60">Customer</span>
+                <span class="text-white">${tx.customerPhone}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                <span class="text-white/60">Reference</span>
+                <span class="text-white">${tx.reference}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                <span class="text-white/60">Date & Time</span>
+                <span class="text-white text-sm">${tx.timestamp}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                <span class="text-white/60">Created By</span>
+                <span class="text-white">${tx.createdBy}</span>
+            </div>
+            ${tx.notes !== '-' ? `
+            <div class="p-3 bg-white/5 rounded-xl">
+                <span class="text-white/60 block mb-1">Notes</span>
+                <span class="text-white text-sm">${tx.notes}</span>
+            </div>
+            ` : ''}
+        </div>
+        
+        <div class="mt-6 text-center text-white/30 text-xs">
+            Transaction ID: #${tx.id}
+        </div>
+    `;
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeTransactionModal() {
+    const modal = document.getElementById('transactionDetailModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
 </script>
+
+<!-- Transaction Detail Modal -->
+<div id="transactionDetailModal" 
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm"
+     onclick="if(event.target === this) closeTransactionModal()">
+    <div class="bg-slate-800 rounded-3xl border border-white/10 w-[90%] max-w-md max-h-[80vh] overflow-y-auto shadow-2xl m-4">
+        <!-- Header -->
+        <div class="sticky top-0 bg-slate-800 border-b border-white/10 p-4 flex items-center justify-between">
+            <h3 class="text-white font-bold text-lg">Transaction Details</h3>
+            <button onclick="closeTransactionModal()" class="p-2 text-white/50 hover:text-white transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Content -->
+        <div id="transactionDetailContent" class="p-4">
+            <!-- Filled by JavaScript -->
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
