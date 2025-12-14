@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Commission Rates - {{ kiosk.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen pb-24">
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-white/10">
+        <div class="flex items-center justify-between px-4 py-3">
+            <a href="{% url 'core:notification_preferences' %}" class="p-2 text-white/70 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <h1 class="text-lg font-semibold text-white">Commission Rates</h1>
+            <div class="w-10"></div>
+        </div>
+    </header>
+    
+    <main class="p-4 max-w-lg mx-auto space-y-6">
+        <!-- Kiosk info -->
+        <div class="flex items-center gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-white font-semibold">{{ kiosk.name }}</p>
+                <p class="text-white/50 text-sm">Your profit rates per network</p>
+            </div>
+        </div>
+        
+        <!-- Info box -->
+        <div class="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <p class="text-blue-300 font-medium text-sm">How this works</p>
+                    <p class="text-blue-300/70 text-xs mt-1">
+                        <strong>Deposits:</strong> Your commission % of amount or fixed fee<br>
+                        <strong>Withdrawals:</strong> Your share % of network fee or fixed fee
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Network rates -->
+        {% for network_id, data in rates_by_network.items %}
+        <div class="bg-white/5 backdrop-blur rounded-2xl border border-white/10 overflow-hidden" 
+             x-data="{ open: false, showForm: false, editRate: null, formType: 'DEPOSIT' }">
+            
+            <!-- Network header -->
+            <button @click="open = !open" 
+                    class="w-full flex items-center justify-between p-4 hover:bg-white/5 transition">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white"
+                         style="background-color: {{ data.network.color }};">
+                        {{ data.network.code|slice:":2" }}
+                    </div>
+                    <div class="text-left">
+                        <p class="text-white font-semibold">{{ data.network.name }}</p>
+                        <p class="text-white/50 text-xs">
+                            {{ data.deposit_rates.count }} deposit • {{ data.withdrawal_rates.count }} withdrawal rates
+                        </p>
+                    </div>
+                </div>
+                <svg class="w-5 h-5 text-white/50 transition-transform" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            
+            <!-- Expanded rates -->
+            <div x-show="open" x-transition class="border-t border-white/10">
+                
+                <!-- Deposit Rates -->
+                <div class="p-4 border-b border-white/10">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-green-400 font-medium text-sm flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                            </svg>
+                            Deposit Rates
+                        </span>
+                        <button @click="showForm = true; formType = 'DEPOSIT'; editRate = null"
+                                class="text-xs text-primary-400 hover:text-primary-300">+ Add</button>
+                    </div>
+                    
+                    {% if data.deposit_rates %}
+                    <div class="space-y-2">
+                        {% for rate in data.deposit_rates %}
+                        <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                            <div>
+                                <span class="text-white/70 text-sm">{{ rate.min_amount|floatformat:0 }} - {{ rate.max_amount|floatformat:0 }} CFA</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-green-400 font-semibold text-sm">
+                                    {% if rate.rate_type == 'FIXED' %}{{ rate.rate_value|floatformat:0 }} CFA{% else %}{{ rate.rate_value }}%{% endif %}
+                                </span>
+                                <form method="post" action="{% url 'core:delete_commission_rate' rate.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-red-400 hover:text-red-300 p-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-white/40 text-sm">No deposit rates set</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Withdrawal Rates -->
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-red-400 font-medium text-sm flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                            </svg>
+                            Withdrawal Rates
+                        </span>
+                        <button @click="showForm = true; formType = 'WITHDRAWAL'; editRate = null"
+                                class="text-xs text-primary-400 hover:text-primary-300">+ Add</button>
+                    </div>
+                    
+                    {% if data.withdrawal_rates %}
+                    <div class="space-y-2">
+                        {% for rate in data.withdrawal_rates %}
+                        <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                            <div>
+                                <span class="text-white/70 text-sm">{{ rate.min_amount|floatformat:0 }} - {{ rate.max_amount|floatformat:0 }} CFA</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-red-400 font-semibold text-sm">
+                                    {% if rate.rate_type == 'FIXED' %}{{ rate.rate_value|floatformat:0 }} CFA{% else %}{{ rate.rate_value }}% of fee{% endif %}
+                                </span>
+                                <form method="post" action="{% url 'core:delete_commission_rate' rate.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-red-400 hover:text-red-300 p-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-white/40 text-sm">No withdrawal rates set</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Add/Edit Form (modal-like) -->
+                <div x-show="showForm" x-transition class="p-4 bg-slate-800 border-t border-white/10">
+                    <form method="post" class="space-y-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="network_id" value="{{ data.network.id }}">
+                        <input type="hidden" name="transaction_type" :value="formType">
+                        
+                        <p class="text-white font-medium" x-text="formType === 'DEPOSIT' ? 'Add Deposit Rate' : 'Add Withdrawal Rate'"></p>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-white/70 text-xs mb-1">Min Amount</label>
+                                <input type="number" name="min_amount" required min="0" step="1"
+                                       class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-white/70 text-xs mb-1">Max Amount</label>
+                                <input type="number" name="max_amount" required min="0" step="1"
+                                       class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-white/70 text-xs mb-1">Rate Type</label>
+                                <select name="rate_type" class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm">
+                                    <option value="PERCENTAGE">Percentage %</option>
+                                    <option value="FIXED">Fixed Amount</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-white/70 text-xs mb-1">Rate Value</label>
+                                <input type="number" name="rate_value" required min="0" step="0.01"
+                                       class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm">
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <button type="button" @click="showForm = false"
+                                    class="flex-1 py-2 bg-white/10 text-white rounded-lg text-sm">Cancel</button>
+                            <button type="submit"
+                                    class="flex-1 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </main>
+</div>
+{% endblock %}

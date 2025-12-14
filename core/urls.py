@@ -14,6 +14,7 @@ from . import team_views
 from . import fraud_views
 from . import feedback_views
 from . import daily_balance_views
+from . import commission_views
 
 app_name = 'core'
 
@@ -120,6 +121,11 @@ urlpatterns = [
     
     # Notification preferences
     path('settings/notifications/', notification_views.NotificationPreferencesView.as_view(), name='notification_preferences'),
+    
+    # Commission rates settings
+    path('settings/commission-rates/', commission_views.CommissionRatesView.as_view(), name='commission_rates'),
+    path('settings/commission-rates/<int:pk>/delete/', commission_views.DeleteCommissionRateView.as_view(), name='delete_commission_rate'),
+
     
     # =========================================================================
     # TEAM MANAGEMENT
