@@ -26,6 +26,7 @@ class Transaction(models.Model):
     class TransactionType(models.TextChoices):
         DEPOSIT = 'DEPOSIT', 'Deposit (Cash In)'
         WITHDRAWAL = 'WITHDRAWAL', 'Withdrawal (Cash Out)'
+        PROFIT_WITHDRAWAL = 'PROFIT_WITHDRAWAL', 'Profit Withdrawal'
     
     # Relationships
     kiosk = models.ForeignKey(
@@ -51,7 +52,7 @@ class Transaction(models.Model):
     # Transaction details
     transaction_type = models.CharField(
         'type',
-        max_length=15,
+        max_length=20,
         choices=TransactionType.choices,
         help_text='Deposit = customer sending money, Withdrawal = customer taking cash'
     )

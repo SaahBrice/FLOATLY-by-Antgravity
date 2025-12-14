@@ -62,9 +62,9 @@
                     </svg>
                 </div>
                 <div class="text-left">
-                    <h4 class="text-white font-bold mb-2">Your Digital Logbook, Nothing More</h4>
-                    <p class="text-white/80 text-sm leading-relaxed">
-                        Floatly is <strong>not affiliated with MTN, Orange, or any mobile money network</strong>. We don't process, hold, or transfer any money. We're simply the smartest way to <strong>record and track your transactions</strong>—like upgrading from a paper cashbook to an AI-powered digital one.
+                    <h4 class="text-white font-bold mb-2" x-text="$store.i18n.t('disclaimer_title')">Your Digital Logbook, Nothing More</h4>
+                    <p class="text-white/80 text-sm leading-relaxed" x-text="$store.i18n.t('disclaimer_text')">
+                        Floatly is not affiliated with MTN, Orange, or any mobile money network. We don't process, hold, or transfer any money. We're simply the smartest way to record and track your transactions—like upgrading from a paper cashbook to an AI-powered digital one.
                     </p>
                 </div>
             </div>
@@ -80,13 +80,13 @@
     <div class="max-w-7xl mx-auto relative z-10">
         <!-- Section Header -->
         <div class="text-center mb-16">
-            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 text-sm font-bold mb-6">
+            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 text-sm font-bold mb-6" x-text="$store.i18n.t('partners_badge')">
                 🤝 ECOSYSTEM
             </span>
             <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-4">
-                Built By <span class="bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600">Antgravity</span>
+                <span x-text="$store.i18n.t('partners_title')">Built By</span> <span class="bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600">Antgravity</span>
             </h2>
-            <p class="text-slate-600 dark:text-white/60 max-w-2xl mx-auto">
+            <p class="text-slate-600 dark:text-white/60 max-w-2xl mx-auto" x-text="$store.i18n.t('partners_subtitle')">
                 Floatly is part of a family of African-built products empowering creativity, education, and technology across the continent.
             </p>
         </div>
@@ -167,7 +167,7 @@
         </div>
         
         <!-- Bottom tagline -->
-        <p class="text-center text-slate-400 dark:text-white/40 text-sm mt-10">
+        <p class="text-center text-slate-400 dark:text-white/40 text-sm mt-10" x-text="$store.i18n.t('partners_tagline')">
             🌍 Building technology that matters, from Africa, for the world.
         </p>
     </div>

@@ -27,14 +27,16 @@
         <script src="https://unpkg.com/htmx.org@1.9.10"
                 integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
                 crossorigin="anonymous"></script>
-        <!-- AlpineJS -->
+        
+        <!-- Alpine stores MUST load before Alpine.js (with defer) -->
+        <script defer src="/static/js/alpine_stores.js"></script>
+        <!-- AlpineJS (loads after stores due to defer order) -->
         <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
         
         <!-- Chart.js for Dashboard Charts -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
         
-        <!-- Alpine stores & Dashboard chart (extracted to external files) -->
-        <script src="/static/js/alpine_stores.js"></script>
+        <!-- Dashboard chart component -->
         <script src="/static/js/dashboard_chart.js"></script>
         <!-- Custom Styles -->
         <style>

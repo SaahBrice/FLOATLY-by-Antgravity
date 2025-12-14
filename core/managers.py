@@ -99,10 +99,11 @@ class TransactionQuerySet(models.QuerySet):
     
     def calculate_balances(self, date=None, kiosk=None):
         """
-        Calculate the current cash and float balances based on transactions.
+        Calculate the current cash, float, and profit balances based on transactions.
         
-        Deposit (Cash In): Physical Cash ↑ | Digital Float ↓
-        Withdrawal (Cash Out): Physical Cash ↓ | Digital Float ↑
+        Cash In (Deposit): Cash ↑, Float ↓, Profit ↑ (commission from network)
+        Cash Out (Withdrawal): Cash ↓, Float ↑, Profit ↑ (share of fee)
+        Profit Withdrawal: Profit ↓, Float ↑ (moves profit to main account)
         
         If date is provided, uses opening balance for that day + day's transactions.
         If no date, uses today.
@@ -111,8 +112,10 @@ class TransactionQuerySet(models.QuerySet):
         - cash_balance: Current cash in drawer
         - float_balance: Total float across all networks
         - float_per_network: Dict of {network_id: balance} for each network
+        - profit_balance: Total profit across all networks (today only)
+        - profit_per_network: Dict of {network_id: profit} for each network
         - day_started: Whether opening balance exists for the day
-        - total_profit: Sum of all profits
+        - total_profit: Sum of all profits (alias for profit_balance)
         """
         from django.utils import timezone
         from .models import DailyOpeningBalance, Network
@@ -150,12 +153,14 @@ class TransactionQuerySet(models.QuerySet):
         day_transactions = self.filter(timestamp__date=target_date)
         
         # Calculate cash delta for the day
+        # DEPOSIT: +cash, WITHDRAWAL: -cash, PROFIT_WITHDRAWAL: no effect on cash
         cash_delta = day_transactions.aggregate(
             delta=Coalesce(
                 Sum(
                     Case(
                         When(transaction_type='DEPOSIT', then=F('amount')),
                         When(transaction_type='WITHDRAWAL', then=-F('amount')),
+                        # PROFIT_WITHDRAWAL doesn't affect cash
                         default=Decimal('0'),
                         output_field=DecimalField(max_digits=12, decimal_places=2)
                     )
@@ -164,18 +169,23 @@ class TransactionQuerySet(models.QuerySet):
             )
         )['delta']
         
-        # Calculate per-network float deltas
+        # Calculate per-network float and profit deltas
         float_per_network = {}
+        profit_per_network = {}
         total_float = Decimal('0')
+        total_profit = Decimal('0')
         
         for network in Network.objects.filter(is_active=True):
             network_transactions = day_transactions.filter(network=network)
+            
+            # Float delta: WITHDRAWAL: +amount, DEPOSIT: -amount, PROFIT_WITHDRAWAL: +amount
             float_delta = network_transactions.aggregate(
                 delta=Coalesce(
                     Sum(
                         Case(
                             When(transaction_type='WITHDRAWAL', then=F('amount')),
                             When(transaction_type='DEPOSIT', then=-F('amount')),
+                            When(transaction_type='PROFIT_WITHDRAWAL', then=F('amount')),
                             default=Decimal('0'),
                             output_field=DecimalField(max_digits=12, decimal_places=2)
                         )
@@ -184,30 +194,54 @@ class TransactionQuerySet(models.QuerySet):
                 )
             )['delta']
             
+            # Profit: Sum of all profit fields minus any profit withdrawals
+            # DEPOSIT/WITHDRAWAL: profit field is commission/share
+            # PROFIT_WITHDRAWAL: profit field is negative (withdrawal from profit account)
+            profit_earned = network_transactions.exclude(
+                transaction_type='PROFIT_WITHDRAWAL'
+            ).aggregate(
+                earned=Coalesce(Sum('profit'), Decimal('0'))
+            )['earned']
+            
+            profit_withdrawn = network_transactions.filter(
+                transaction_type='PROFIT_WITHDRAWAL'
+            ).aggregate(
+                withdrawn=Coalesce(Sum('amount'), Decimal('0'))
+            )['withdrawn']
+            
+            network_profit = profit_earned - profit_withdrawn
+            
             network_opening = opening_floats.get(network.id, Decimal('0'))
             network_balance = network_opening + float_delta
+            
             float_per_network[network.id] = {
                 'network': network,
                 'balance': network_balance,
                 'opening': network_opening,
                 'delta': float_delta,
             }
+            profit_per_network[network.id] = {
+                'network': network,
+                'earned': profit_earned,
+                'withdrawn': profit_withdrawn,
+                'balance': network_profit,
+            }
+            
             total_float += network_balance
-        
-        # Calculate total profit
-        total_profit = day_transactions.aggregate(
-            profit=Coalesce(Sum('profit'), Decimal('0'))
-        )['profit']
+            total_profit += network_profit
         
         return {
             'cash_balance': opening_cash + cash_delta,
             'float_balance': total_float,
             'float_per_network': float_per_network,
+            'profit_balance': total_profit,
+            'profit_per_network': profit_per_network,
             'day_started': day_started,
             'total_profit': total_profit,
             'opening_cash': opening_cash,
             'cash_delta': cash_delta,
         }
+
     
     def calculate_balances_legacy(self):
         """

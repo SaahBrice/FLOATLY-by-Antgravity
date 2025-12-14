@@ -71,6 +71,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 'cash_balance': Decimal('0'),
                 'float_balance': Decimal('0'),
                 'float_per_network': {},
+                'profit_balance': Decimal('0'),
+                'profit_per_network': {},
                 'day_started': False,
                 'today_profit': Decimal('0'),
                 'today_count': 0,
@@ -96,11 +98,14 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             'cash_balance': balances.get('cash_balance', Decimal('0')),
             'float_balance': balances.get('float_balance', Decimal('0')),
             'float_per_network': balances.get('float_per_network', {}),
+            'profit_balance': balances.get('profit_balance', Decimal('0')),
+            'profit_per_network': balances.get('profit_per_network', {}),
             'day_started': balances.get('day_started', False),
             'today_profit': balances.get('total_profit', Decimal('0')),
             'today_count': today_count,
             'recent_transactions': recent,
         }
+
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
