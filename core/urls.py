@@ -93,6 +93,9 @@ urlpatterns = [
     # HTMX profit calculation
     path('transactions/calculate-profit/', transaction_views.CalculateProfitView.as_view(), name='calculate_profit'),
     
+    # Recent customers for autocomplete
+    path('api/recent-customers/', transaction_views.RecentCustomersView.as_view(), name='recent_customers'),
+    
     # Receipt image processing (AI)
     path('transactions/process-receipt/', ai_views.ProcessReceiptImageView.as_view(), name='process_receipt'),
     

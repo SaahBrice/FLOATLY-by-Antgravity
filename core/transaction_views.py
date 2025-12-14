@@ -86,12 +86,37 @@ class AddTransactionView(LoginRequiredMixin, FormView):
         kwargs['kiosk'] = self.kiosk
         kwargs['user'] = self.request.user
         
+        initial = kwargs.get('initial', {})
+        
+        # Check for repeat transaction params (from Repeat button)
+        tx_type = self.request.GET.get('type', '')
+        network_id = self.request.GET.get('network', '')
+        amount = self.request.GET.get('amount', '')
+        customer_phone = self.request.GET.get('customer_phone', '')
+        customer_name = self.request.GET.get('customer_name', '')
+        
+        if tx_type:
+            initial['transaction_type'] = tx_type
+        if network_id:
+            try:
+                initial['network'] = int(network_id)
+            except (ValueError, TypeError):
+                pass
+        if amount:
+            try:
+                initial['amount'] = Decimal(amount.replace(',', ''))
+            except (InvalidOperation, ValueError):
+                pass
+        if customer_phone:
+            initial['customer_phone'] = customer_phone
+        if customer_name:
+            initial['customer_name'] = customer_name
+        
         # Check for SMS text in GET params (from share)
         sms_text = self.request.GET.get('text', '')
         if sms_text:
             # Parse SMS and use as initial data
             parsed = parse_sms(sms_text)
-            initial = kwargs.get('initial', {})
             
             if parsed.get('network'):
                 try:
@@ -113,8 +138,8 @@ class AddTransactionView(LoginRequiredMixin, FormView):
                 initial['transaction_ref'] = parsed['transaction_ref']
             
             initial['sms_text'] = sms_text
-            
-            kwargs['initial'] = initial
+        
+        kwargs['initial'] = initial
         
         return kwargs
     
@@ -667,3 +692,55 @@ class TransactionListView(LoginRequiredMixin, ListView):
         
         return context
 
+
+class RecentCustomersView(LoginRequiredMixin, View):
+    """
+    API endpoint that returns recent unique customers for autocomplete.
+    Returns last 10 unique customer phones from the kiosk's transactions.
+    """
+    login_url = '/auth/login/'
+    
+    def get(self, request):
+        from django.http import JsonResponse
+        
+        # Get kiosk from session or query param
+        kiosk_slug = request.GET.get('kiosk') or request.session.get('active_kiosk_slug')
+        
+        if not kiosk_slug:
+            return JsonResponse({'customers': []})
+        
+        try:
+            kiosk = Kiosk.objects.get(slug=kiosk_slug, is_active=True)
+        except Kiosk.DoesNotExist:
+            return JsonResponse({'customers': []})
+        
+        # Check user has access
+        is_owner = kiosk.owner == request.user
+        is_member = kiosk.members.filter(user=request.user).exists()
+        
+        if not (is_owner or is_member):
+            return JsonResponse({'customers': []})
+        
+        # Get recent unique customers (with phone numbers)
+        customers = (
+            Transaction.objects
+            .filter(kiosk=kiosk, customer_phone__isnull=False)
+            .exclude(customer_phone='')
+            .values('customer_phone', 'customer_name')
+            .order_by('-timestamp')
+        )
+        
+        # Deduplicate by phone number, keeping most recent
+        seen = set()
+        unique_customers = []
+        for c in customers:
+            if c['customer_phone'] not in seen:
+                seen.add(c['customer_phone'])
+                unique_customers.append({
+                    'phone': c['customer_phone'],
+                    'name': c['customer_name'] or ''
+                })
+            if len(unique_customers) >= 10:
+                break
+        
+        return JsonResponse({'customers': unique_customers})

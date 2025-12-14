@@ -334,8 +334,27 @@
                         <p class="text-white/40 text-xs mt-1">Leave empty for current time</p>
                     </div>
                     
-                    <!-- Customer Phone -->
-                    <div>
+                    <!-- Customer Phone with Autocomplete -->
+                    <div x-data="{ 
+                        showDropdown: false, 
+                        customers: [],
+                        async loadCustomers() {
+                            try {
+                                const resp = await fetch('{% url "core:recent_customers" %}');
+                                const data = await resp.json();
+                                this.customers = data.customers || [];
+                            } catch (e) {
+                                this.customers = [];
+                            }
+                        },
+                        selectCustomer(phone, name) {
+                            document.getElementById('id_customer_phone').value = phone;
+                            if (name) {
+                                document.getElementById('id_customer_name').value = name;
+                            }
+                            this.showDropdown = false;
+                        }
+                    }" @click.away="showDropdown = false" class="relative">
                         <label for="id_customer_phone" class="block text-white/70 text-sm font-medium mb-2">Customer Phone</label>
                         <input type="tel" 
                                name="customer_phone" 
@@ -344,10 +363,28 @@
                                placeholder="+237..."
                                class="form-input"
                                inputmode="tel"
+                               @focus="loadCustomers(); showDropdown = customers.length > 0"
+                               @input="showDropdown = false"
                                hx-get="{% url 'core:check_phone' %}"
                                hx-trigger="keyup changed delay:500ms"
                                hx-target="#phone-warning"
                                hx-vals='{"phone": this.value}'>
+                        
+                        <!-- Recent Customers Dropdown -->
+                        <div x-show="showDropdown && customers.length > 0" 
+                             x-transition
+                             class="absolute z-20 mt-1 w-full bg-slate-700 rounded-xl border border-white/10 shadow-xl max-h-48 overflow-y-auto">
+                            <p class="px-3 py-2 text-xs text-white/50 border-b border-white/10">Recent Customers</p>
+                            <template x-for="c in customers" :key="c.phone">
+                                <button type="button"
+                                        @click="selectCustomer(c.phone, c.name)"
+                                        class="w-full px-3 py-2 text-left hover:bg-white/10 transition flex items-center gap-2">
+                                    <span class="text-white" x-text="c.phone"></span>
+                                    <span class="text-white/50 text-sm" x-text="c.name" x-show="c.name"></span>
+                                </button>
+                            </template>
+                        </div>
+                        
                         <!-- Blacklist Warning Container -->
                         <div id="phone-warning" class="mt-2"></div>
                     </div>
