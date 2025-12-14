@@ -203,9 +203,15 @@ class CalculateProfitView(LoginRequiredMixin, View):
     """
     HTMX endpoint for live profit calculation.
     Returns the calculated profit based on amount, network, and type.
+    
+    Uses AgentCommissionRate for accurate agent profit:
+    - Deposits: agent's commission (% of amount or fixed)
+    - Withdrawals: agent's share of network fee
     """
     
     def get(self, request):
+        from .models import AgentCommissionRate
+        
         try:
             network_id = request.GET.get('network')
             amount_str = request.GET.get('amount', '0')
@@ -233,7 +239,44 @@ class CalculateProfitView(LoginRequiredMixin, View):
                     'warning': 'Invalid network',
                 })
             
-            # Look up commission rate (rates apply to both deposit and withdrawal)
+            # Get user's active kiosk
+            kiosk = Kiosk.objects.filter(owner=request.user, is_active=True).first()
+            if not kiosk:
+                membership = KioskMember.objects.filter(user=request.user, kiosk__is_active=True).first()
+                if membership:
+                    kiosk = membership.kiosk
+            
+            if kiosk:
+                # Try agent-specific commission rate first
+                profit = AgentCommissionRate.calculate_agent_profit(
+                    kiosk=kiosk,
+                    network=network,
+                    transaction_type=transaction_type,
+                    amount=amount
+                )
+                
+                if profit > Decimal('0'):
+                    # Get rate info for display
+                    agent_rate = AgentCommissionRate.get_rate_for_transaction(
+                        kiosk, network, transaction_type, amount
+                    )
+                    rate_info = None
+                    if agent_rate:
+                        if agent_rate.rate_type == 'PERCENTAGE':
+                            if transaction_type == 'WITHDRAWAL':
+                                rate_info = f"{agent_rate.rate_value}% of fee"
+                            else:
+                                rate_info = f"{agent_rate.rate_value}%"
+                        else:
+                            rate_info = f"{agent_rate.rate_value:,.0f} CFA"
+                    
+                    return render(request, 'transactions/partials/profit_display.html', {
+                        'profit': profit,
+                        'warning': None,
+                        'rate_info': rate_info,
+                    })
+            
+            # Fallback to old CommissionRate (backward compatibility or no agent rate set)
             rate = CommissionRate.objects.filter(
                 network=network,
                 min_amount__lte=amount,
@@ -250,13 +293,13 @@ class CalculateProfitView(LoginRequiredMixin, View):
                 
                 return render(request, 'transactions/partials/profit_display.html', {
                     'profit': profit,
-                    'warning': None,
+                    'warning': 'Using default rate. Set your rates in Settings → Commission Rates.',
                     'rate_info': f'{rate.rate_value}{"%"if rate.rate_type == "PERCENTAGE" else " CFA"}',
                 })
             else:
                 return render(request, 'transactions/partials/profit_display.html', {
                     'profit': None,
-                    'warning': 'No commission rate found for this amount. Enter profit manually.',
+                    'warning': 'No commission rate found. Set your rates in Settings → Commission Rates.',
                 })
                 
         except Exception as e:

@@ -23,7 +23,7 @@ Complete data structure for the mobile money agent logbook:
 
 from .user import User, phone_validator
 from .kiosk import Kiosk, KioskMember
-from .network import Network, CommissionRate
+from .network import Network, CommissionRate, AgentCommissionRate
 from .transaction import Transaction
 from .daily_balance import DailyOpeningBalance, NetworkFloatBalance
 from .notification import Notification, PushSubscription, NotificationPreference
@@ -46,6 +46,7 @@ __all__ = [
     # Network
     'Network',
     'CommissionRate',
+    'AgentCommissionRate',
     
     # Transaction
     'Transaction',

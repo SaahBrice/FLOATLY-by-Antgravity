@@ -159,23 +159,48 @@ class Transaction(models.Model):
         return f"{self.get_transaction_type_display()} {self.amount} CFA @ {self.kiosk.name}"
     
     def save(self, *args, **kwargs):
-        """Auto-calculate profit if not set or if amount changed."""
-        from .network import CommissionRate
+        """
+        Auto-calculate profit based on transaction type and agent's commission rates.
+        
+        For DEPOSITS: profit = agent's commission (% of amount or fixed)
+        For WITHDRAWALS: profit = agent's share of network fee
+        For PROFIT_WITHDRAWAL: no profit calculation needed
+        """
+        from .network import CommissionRate, AgentCommissionRate
         
         # Calculate commission if this is a new transaction or amount changed
         is_new = self.pk is None
         
         if is_new or not self.profit_was_edited:
-            # Look up commission rate
-            rate = CommissionRate.get_rate_for_amount(self.network, self.amount)
-            if rate:
-                self.calculated_profit = rate.calculate_commission(self.amount)
-                if not self.profit_was_edited:
-                    self.profit = self.calculated_profit
-            else:
+            # Skip profit calculation for profit withdrawal transactions
+            if self.transaction_type == self.TransactionType.PROFIT_WITHDRAWAL:
                 self.calculated_profit = Decimal('0')
                 if not self.profit_was_edited:
                     self.profit = Decimal('0')
+            else:
+                # Try to use agent-specific rate first
+                profit = AgentCommissionRate.calculate_agent_profit(
+                    kiosk=self.kiosk,
+                    network=self.network,
+                    transaction_type=self.transaction_type,
+                    amount=self.amount
+                )
+                
+                if profit > Decimal('0'):
+                    self.calculated_profit = profit
+                    if not self.profit_was_edited:
+                        self.profit = profit
+                else:
+                    # Fallback to old CommissionRate (for backward compatibility)
+                    rate = CommissionRate.get_rate_for_amount(self.network, self.amount)
+                    if rate:
+                        self.calculated_profit = rate.calculate_commission(self.amount)
+                        if not self.profit_was_edited:
+                            self.profit = self.calculated_profit
+                    else:
+                        self.calculated_profit = Decimal('0')
+                        if not self.profit_was_edited:
+                            self.profit = Decimal('0')
         
         super().save(*args, **kwargs)
     

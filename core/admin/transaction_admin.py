@@ -5,7 +5,7 @@ Transaction and Network Admin configuration for Floatly.
 from django.contrib import admin
 from django.utils.html import format_html
 
-from ..models import Network, CommissionRate, Transaction
+from ..models import Network, CommissionRate, AgentCommissionRate, Transaction
 
 
 class CommissionRateInline(admin.TabularInline):
@@ -44,7 +44,7 @@ class NetworkAdmin(admin.ModelAdmin):
 
 @admin.register(CommissionRate)
 class CommissionRateAdmin(admin.ModelAdmin):
-    """Admin configuration for CommissionRate model."""
+    """Admin configuration for CommissionRate (network fees for withdrawals)."""
     
     list_display = [
         'network', 'amount_range', 'rate_display', 
@@ -77,6 +77,47 @@ class CommissionRateAdmin(admin.ModelAdmin):
             obj.rate_value
         )
     rate_display.short_description = 'Commission'
+
+
+@admin.register(AgentCommissionRate)
+class AgentCommissionRateAdmin(admin.ModelAdmin):
+    """Admin configuration for AgentCommissionRate (agent's profit rates per kiosk)."""
+    
+    list_display = [
+        'kiosk', 'network', 'transaction_type', 'amount_range', 
+        'rate_display', 'is_active', 'updated_at'
+    ]
+    list_filter = ['kiosk', 'network', 'transaction_type', 'rate_type', 'is_active']
+    search_fields = ['kiosk__name', 'network__name', 'network__code']
+    autocomplete_fields = ['kiosk', 'network']
+    
+    fieldsets = (
+        ('Agent & Network', {'fields': ('kiosk', 'network', 'transaction_type')}),
+        ('Amount Range', {'fields': (('min_amount', 'max_amount'),)}),
+        ('Profit Rate', {
+            'fields': (('rate_type', 'rate_value'),),
+            'description': 'For Deposits: % of amount or fixed. For Withdrawals: % of network fee or fixed.'
+        }),
+        ('Status', {'fields': ('is_active',)}),
+    )
+    
+    def amount_range(self, obj):
+        return f"{obj.min_amount:,.0f} - {obj.max_amount:,.0f} CFA"
+    amount_range.short_description = 'Amount Range'
+    amount_range.admin_order_field = 'min_amount'
+    
+    def rate_display(self, obj):
+        if obj.rate_type == 'FIXED':
+            return format_html(
+                '<span style="color: #22c55e; font-weight: bold;">{:,.0f} CFA</span>',
+                obj.rate_value
+            )
+        return format_html(
+            '<span style="color: #3b82f6; font-weight: bold;">{}%</span>',
+            obj.rate_value
+        )
+    rate_display.short_description = 'Profit Rate'
+
 
 
 @admin.register(Transaction)
