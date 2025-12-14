@@ -4,24 +4,24 @@
 {% block title %}Report - {{ report.date }} | {{ kiosk.name }}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen pb-24">
+<div class="min-h-screen pb-24" x-data="reportApp()">
     
-    <!-- Header -->
-    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-white/10">
+    <!-- Header with glass effect -->
+    <header class="sticky top-0 z-40 backdrop-blur-xl bg-gradient-to-r from-slate-900/95 via-purple-900/50 to-slate-900/95 border-b border-white/10">
         <div class="flex items-center justify-between px-4 py-3">
-            <a href="{% url 'core:report_list' %}" class="p-2 text-white/70 hover:text-white">
+            <a href="{% url 'core:report_list' %}" class="p-2 text-white/70 hover:text-white transition">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
             </a>
             <div class="text-center">
-                <h1 class="text-lg font-semibold text-white">{{ report.date|date:"M d, Y" }}</h1>
-                <p class="text-white/50 text-xs">{{ kiosk.name }}</p>
+                <h1 class="text-lg font-bold text-white">{{ report.date|date:"l" }}</h1>
+                <p class="text-white/60 text-xs">{{ report.date|date:"M d, Y" }} • {{ kiosk.name }}</p>
             </div>
             {% if is_today %}
             <form method="post" action="{% url 'core:report_regenerate' date_str=report.date|date:'Y-m-d' %}?kiosk={{ kiosk.slug }}">
                 {% csrf_token %}
-                <button type="submit" class="p-2 text-white/70 hover:text-white" title="Refresh">
+                <button type="submit" class="p-2 text-white/70 hover:text-white transition hover:rotate-180 duration-500" title="Refresh">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
@@ -33,140 +33,348 @@
         </div>
     </header>
     
-    <main class="p-4 max-w-lg mx-auto space-y-4">
+    <main class="p-4 max-w-lg mx-auto space-y-5">
         
-        <!-- Low Balance Alerts -->
+        <!-- Low Balance Alerts - Animated -->
         {% if data.low_balance_alerts %}
-        <div class="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-            <div class="flex items-center gap-2 mb-2">
-                <span class="text-red-400 text-xl">⚠️</span>
-                <span class="text-red-400 font-semibold">Low Balance Alert</span>
+        <div class="p-4 bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30 rounded-2xl animate-pulse-slow">
+            <div class="flex items-center gap-2 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-red-500/30 flex items-center justify-center">
+                    <span class="text-xl">⚠️</span>
+                </div>
+                <div>
+                    <span class="text-red-400 font-bold">Low Balance Alert</span>
+                    <p class="text-red-300/60 text-xs">Action required</p>
+                </div>
             </div>
-            <div class="space-y-1">
+            <div class="space-y-2">
                 {% for alert in data.low_balance_alerts %}
-                <p class="text-red-300/80 text-sm">
-                    <strong>{{ alert.network_name }}</strong>: {{ alert.balance|floatformat:0 }} CFA 
-                    (below {{ alert.threshold|floatformat:0 }})
-                </p>
+                <div class="flex items-center justify-between p-2 bg-red-500/10 rounded-lg">
+                    <span class="text-red-300 text-sm font-medium">{{ alert.network_name }}</span>
+                    <span class="text-red-400 font-bold">{{ alert.balance|floatformat:0|intcomma }} CFA</span>
+                </div>
                 {% endfor %}
             </div>
         </div>
         {% endif %}
         
-        <!-- Main Stats -->
-        <div class="grid grid-cols-2 gap-3">
-            <!-- Total Profit -->
-            <div class="col-span-2 p-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl">
-                <p class="text-white/80 text-sm">Total Profit Today</p>
-                <p class="text-white font-bold text-3xl mt-1">{{ data.total_profit|floatformat:0|intcomma }} <span class="text-lg font-normal">CFA</span></p>
-                {% if data.vs_yesterday_percent != 0 %}
-                <p class="text-white/70 text-sm mt-2">
-                    {% if data.vs_yesterday_percent > 0 %}↑{% else %}↓{% endif %}
-                    {{ data.vs_yesterday_percent|floatformat:1 }}% vs yesterday
+        <!-- Hero Profit Card -->
+        <div class="relative overflow-hidden p-6 bg-slate-800/80 backdrop-blur-xl rounded-3xl border border-white/10">
+            <!-- Subtle gradient overlay -->
+            <div class="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-purple-500/10"></div>
+            <!-- Decorative glow -->
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-violet-500/20 rounded-full blur-3xl"></div>
+            
+            <div class="relative">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-white/60 text-sm font-medium">💰 Total Profit Today</span>
+                    {% if data.vs_yesterday_percent != 0 %}
+                    <span class="px-2 py-0.5 rounded-full text-xs font-bold
+                                 {% if data.vs_yesterday_percent > 0 %}bg-green-500/20 text-green-400{% else %}bg-red-500/20 text-red-400{% endif %}">
+                        {% if data.vs_yesterday_percent > 0 %}↑{% else %}↓{% endif %}
+                        {{ data.vs_yesterday_percent|floatformat:1 }}%
+                    </span>
+                    {% endif %}
+                </div>
+                <p class="text-white font-black text-4xl tracking-tight">
+                    {{ data.total_profit|floatformat:0|intcomma }}
+                    <span class="text-xl font-normal text-white/50">CFA</span>
                 </p>
-                {% endif %}
-            </div>
-            
-            <!-- Cash Balance -->
-            <div class="p-4 bg-white/5 border border-white/10 rounded-xl">
-                <p class="text-white/60 text-xs">Cash Balance</p>
-                <p class="text-white font-bold text-xl">{{ data.cash_balance|floatformat:0|intcomma }}</p>
-                {% if data.cash_days_remaining %}
-                <p class="text-white/50 text-xs mt-1">~{{ data.cash_days_remaining }} days</p>
-                {% endif %}
-            </div>
-            
-            <!-- Float Balance -->
-            <div class="p-4 bg-white/5 border border-white/10 rounded-xl">
-                <p class="text-white/60 text-xs">Float Balance</p>
-                <p class="text-white font-bold text-xl">{{ data.float_balance|floatformat:0|intcomma }}</p>
-                {% if data.float_days_remaining %}
-                <p class="text-white/50 text-xs mt-1">~{{ data.float_days_remaining }} days</p>
-                {% endif %}
+                
+                <!-- Mini stats -->
+                <div class="flex gap-6 mt-4 pt-4 border-t border-white/10">
+                    <div>
+                        <p class="text-white/40 text-xs">Volume</p>
+                        <p class="text-white font-semibold">{{ data.total_volume|floatformat:0|intcomma }}</p>
+                    </div>
+                    <div>
+                        <p class="text-white/40 text-xs">Transactions</p>
+                        <p class="text-white font-semibold">{{ data.transaction_count }}</p>
+                    </div>
+                    <div>
+                        <p class="text-white/40 text-xs">Avg Size</p>
+                        <p class="text-white font-semibold">{{ data.avg_transaction_size|floatformat:0|intcomma }}</p>
+                    </div>
+                </div>
             </div>
         </div>
         
-        <!-- Transaction Stats -->
-        <div class="p-4 bg-white/5 border border-white/10 rounded-xl">
-            <h3 class="text-white font-semibold mb-3">Transactions</h3>
-            <div class="grid grid-cols-3 gap-4 text-center">
-                <div>
-                    <p class="text-2xl font-bold text-white">{{ data.transaction_count }}</p>
-                    <p class="text-white/50 text-xs">Total</p>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-green-400">{{ data.deposit_count }}</p>
-                    <p class="text-white/50 text-xs">Deposits</p>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-red-400">{{ data.withdrawal_count }}</p>
-                    <p class="text-white/50 text-xs">Withdrawals</p>
+        <!-- Profit Streak & Efficiency Row -->
+        <div class="grid grid-cols-2 gap-3">
+            <!-- Profit Streak -->
+            {% if data.profit_streak > 0 %}
+            <div class="p-4 bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20 rounded-2xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/30 flex items-center justify-center">
+                        <span class="text-2xl">🔥</span>
+                    </div>
+                    <div>
+                        <p class="text-white/60 text-xs">Profit Streak</p>
+                        <p class="text-white font-bold text-2xl">{{ data.profit_streak }} <span class="text-sm font-normal text-white/50">days</span></p>
+                    </div>
                 </div>
             </div>
-            {% if data.avg_transaction_size > 0 %}
-            <div class="mt-3 pt-3 border-t border-white/10">
-                <div class="flex justify-between text-sm">
-                    <span class="text-white/60">Average Size</span>
-                    <span class="text-white">{{ data.avg_transaction_size|floatformat:0|intcomma }} CFA</span>
-                </div>
-                <div class="flex justify-between text-sm mt-1">
-                    <span class="text-white/60">Total Volume</span>
-                    <span class="text-white">{{ data.total_volume|floatformat:0|intcomma }} CFA</span>
+            {% else %}
+            <div class="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
+                        <span class="text-2xl">💪</span>
+                    </div>
+                    <div>
+                        <p class="text-white/60 text-xs">Profit Streak</p>
+                        <p class="text-white/50 font-medium text-sm">Start today!</p>
+                    </div>
                 </div>
             </div>
             {% endif %}
-        </div>
-        
-        <!-- Weekly Comparison -->
-        <div class="p-4 bg-white/5 border border-white/10 rounded-xl">
-            <h3 class="text-white font-semibold mb-3">Comparisons</h3>
-            <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                    <span class="text-white/60 text-sm">vs Yesterday</span>
-                    <span class="{% if data.vs_yesterday_percent >= 0 %}text-green-400{% else %}text-red-400{% endif %} font-semibold">
-                        {% if data.vs_yesterday_percent > 0 %}+{% endif %}{{ data.vs_yesterday_percent|floatformat:1 }}%
-                    </span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-white/60 text-sm">vs Same Day Last Week</span>
-                    <span class="{% if data.vs_last_week_percent >= 0 %}text-green-400{% else %}text-red-400{% endif %} font-semibold">
-                        {% if data.vs_last_week_percent > 0 %}+{% endif %}{{ data.vs_last_week_percent|floatformat:1 }}%
-                    </span>
+            
+            <!-- Profit Efficiency -->
+            <div class="p-4 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/20 rounded-2xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-cyan-500/30 flex items-center justify-center">
+                        <span class="text-2xl">⚡</span>
+                    </div>
+                    <div>
+                        <p class="text-white/60 text-xs">Per Transaction</p>
+                        <p class="text-white font-bold text-xl">{{ data.profit_per_transaction|floatformat:0|intcomma }} <span class="text-xs font-normal text-white/50">CFA</span></p>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <!-- Float per Network -->
+        <!-- 7-Day Profit Trend -->
+        {% if data.profit_trend %}
+        <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+            <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
+                📈 7-Day Trend
+            </h3>
+            
+            <!-- Mini bar chart -->
+            <div class="flex items-end justify-between gap-2 h-24 mb-3">
+                {% for day in data.profit_trend %}
+                <div class="flex-1 flex flex-col items-center gap-1">
+                    <div class="w-full rounded-t-lg transition-all duration-500 hover:opacity-80
+                                {% if forloop.last %}bg-gradient-to-t from-green-500 to-emerald-400{% else %}bg-white/20{% endif %}"
+                         style="height: {% if day.profit > 0 %}{{ day.profit|divisibleby:data.total_profit|default:1|floatformat:0 }}%{% else %}4px{% endif %}; min-height: 4px;"></div>
+                    <span class="text-white/50 text-xs">{{ day.day|slice:":2" }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Today highlight -->
+            <div class="flex items-center justify-between p-2 bg-green-500/10 rounded-lg">
+                <span class="text-green-400/70 text-sm">Today's Profit</span>
+                <span class="text-green-400 font-bold">{{ data.total_profit|floatformat:0|intcomma }} CFA</span>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Comparison Toggle -->
+        <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-white font-semibold flex items-center gap-2">
+                    📈 Performance
+                </h3>
+                <div class="flex bg-white/10 rounded-xl p-1">
+                    <button @click="comparisonPeriod = 'yesterday'" 
+                            :class="comparisonPeriod === 'yesterday' ? 'bg-violet-500 text-white' : 'text-white/60 hover:text-white'"
+                            class="px-3 py-1 rounded-lg text-xs font-medium transition">
+                        Day
+                    </button>
+                    <button @click="comparisonPeriod = 'week'" 
+                            :class="comparisonPeriod === 'week' ? 'bg-violet-500 text-white' : 'text-white/60 hover:text-white'"
+                            class="px-3 py-1 rounded-lg text-xs font-medium transition">
+                        Week
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Comparison bars -->
+            <div class="space-y-3">
+                <div x-show="comparisonPeriod === 'yesterday'" x-transition>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-white/70 text-sm">vs Yesterday</span>
+                        <span class="font-bold {% if data.vs_yesterday_percent >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                            {% if data.vs_yesterday_percent > 0 %}+{% endif %}{{ data.vs_yesterday_percent|floatformat:1 }}%
+                        </span>
+                    </div>
+                    <div class="h-3 bg-white/10 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-1000 {% if data.vs_yesterday_percent >= 0 %}bg-gradient-to-r from-green-500 to-emerald-400{% else %}bg-gradient-to-r from-red-500 to-orange-400{% endif %}"
+                             style="width: {% if data.vs_yesterday_percent >= 0 %}{{ data.vs_yesterday_percent|floatformat:0 }}{% else %}{{ data.vs_yesterday_percent|floatformat:0|slice:'1:' }}{% endif %}%"></div>
+                    </div>
+                </div>
+                
+                <div x-show="comparisonPeriod === 'week'" x-transition>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-white/70 text-sm">vs Same Day Last Week</span>
+                        <span class="font-bold {% if data.vs_last_week_percent >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                            {% if data.vs_last_week_percent > 0 %}+{% endif %}{{ data.vs_last_week_percent|floatformat:1 }}%
+                        </span>
+                    </div>
+                    <div class="h-3 bg-white/10 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-1000 {% if data.vs_last_week_percent >= 0 %}bg-gradient-to-r from-green-500 to-emerald-400{% else %}bg-gradient-to-r from-red-500 to-orange-400{% endif %}"
+                             style="width: {% if data.vs_last_week_percent >= 0 %}{{ data.vs_last_week_percent|floatformat:0 }}{% else %}{{ data.vs_last_week_percent|floatformat:0|slice:'1:' }}{% endif %}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Balance Cards -->
+        <div class="grid grid-cols-2 gap-3">
+            <!-- Cash Balance -->
+            <div class="relative p-4 bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/20 rounded-2xl overflow-hidden group hover:scale-[1.02] transition-transform">
+                <div class="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-lg">💵</span>
+                        <span class="text-white/60 text-xs font-medium">Cash</span>
+                    </div>
+                    <p class="text-white font-bold text-xl">{{ data.cash_balance|floatformat:0|intcomma }}</p>
+                    {% if data.cash_days_remaining %}
+                    <p class="text-amber-400/70 text-xs mt-1">~{{ data.cash_days_remaining }} days left</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Float Balance -->
+            <div class="relative p-4 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/20 rounded-2xl overflow-hidden group hover:scale-[1.02] transition-transform">
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-lg">📱</span>
+                        <span class="text-white/60 text-xs font-medium">Float</span>
+                    </div>
+                    <p class="text-white font-bold text-xl">{{ data.float_balance|floatformat:0|intcomma }}</p>
+                    {% if data.float_days_remaining %}
+                    <p class="text-blue-400/70 text-xs mt-1">~{{ data.float_days_remaining }} days left</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Transaction Breakdown -->
+        <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-5 border border-white/10">
+            <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
+                📊 Transaction Breakdown
+            </h3>
+            
+            <!-- Deposit vs Withdrawal visual -->
+            <div class="flex items-center gap-3 mb-4">
+                <div class="flex-1">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-green-400 font-medium">Deposits</span>
+                        <span class="text-white">{{ data.deposit_count }}</span>
+                    </div>
+                    <div class="h-4 bg-white/10 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-700"
+                             style="width: {% if data.transaction_count > 0 %}{{ data.deposit_count|divisibleby:data.transaction_count|default:0 }}{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-white/5 border-2 border-white/20 flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">{{ data.transaction_count }}</span>
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-white">{{ data.withdrawal_count }}</span>
+                        <span class="text-red-400 font-medium">Withdrawals</span>
+                    </div>
+                    <div class="h-4 bg-white/10 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-red-400 to-rose-500 rounded-full transition-all duration-700 ml-auto"
+                             style="width: {% if data.transaction_count > 0 %}{{ data.withdrawal_count|divisibleby:data.transaction_count|default:0 }}{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats grid -->
+            <div class="grid grid-cols-3 gap-3 pt-3 border-t border-white/10">
+                <div class="text-center p-2 rounded-xl bg-white/5">
+                    <p class="text-white/50 text-xs">Total</p>
+                    <p class="text-white font-bold text-lg">{{ data.transaction_count }}</p>
+                </div>
+                <div class="text-center p-2 rounded-xl bg-green-500/10">
+                    <p class="text-green-400/70 text-xs">In</p>
+                    <p class="text-green-400 font-bold text-lg">{{ data.deposit_count }}</p>
+                </div>
+                <div class="text-center p-2 rounded-xl bg-red-500/10">
+                    <p class="text-red-400/70 text-xs">Out</p>
+                    <p class="text-red-400 font-bold text-lg">{{ data.withdrawal_count }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Float per Network - Expandable -->
         {% if data.float_per_network %}
-        <div class="p-4 bg-white/5 border border-white/10 rounded-xl">
-            <h3 class="text-white font-semibold mb-3">Float per Network</h3>
+        <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
+            <button @click="showFloatDetails = !showFloatDetails" 
+                    class="w-full p-4 flex items-center justify-between hover:bg-white/5 transition">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                        <span class="text-lg">📊</span>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-white font-semibold">Float by Network</p>
+                        <p class="text-white/50 text-xs">{{ data.float_per_network|length }} networks</p>
+                    </div>
+                </div>
+                <svg class="w-5 h-5 text-white/50 transition-transform" :class="showFloatDetails && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            
+            <div x-show="showFloatDetails" x-collapse>
+                <div class="px-4 pb-4 space-y-2">
+                    {% for n in data.float_per_network %}
+                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-4 h-4 rounded-full" style="background-color: {{ n.network_color }};"></div>
+                            <span class="text-white/80 font-medium">{{ n.network_name }}</span>
+                        </div>
+                        <span class="text-white font-bold">{{ n.balance|floatformat:0|intcomma }} CFA</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Network Distribution - Visual -->
+        {% if data.network_distribution %}
+        <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+            <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
+                🌐 Network Usage
+            </h3>
+            
+            <!-- Pie chart style segments -->
+            <div class="flex justify-center mb-4">
+                <div class="relative w-40 h-40">
+                    <svg viewBox="0 0 36 36" class="w-full h-full -rotate-90">
+                        {% for n in data.network_distribution %}
+                        <circle cx="18" cy="18" r="15.9155" fill="transparent"
+                                stroke="{{ n.network_color }}" stroke-width="3"
+                                stroke-dasharray="{{ n.percentage }} {{ 100|add:n.percentage|add:'-' }}"
+                                stroke-dashoffset="${{ forloop.counter0 }}"></circle>
+                        {% endfor %}
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center">
+                            <p class="text-white font-bold text-2xl">{{ data.transaction_count }}</p>
+                            <p class="text-white/50 text-xs">Total</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Legend -->
             <div class="space-y-2">
-                {% for n in data.float_per_network %}
+                {% for n in data.network_distribution %}
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <div class="w-3 h-3 rounded-full" style="background-color: {{ n.network_color }};"></div>
-                        <span class="text-white/80 text-sm">{{ n.network_name }}</span>
+                        <span class="text-white/70 text-sm">{{ n.network_name }}</span>
                     </div>
-                    <span class="text-white font-medium">{{ n.balance|floatformat:0|intcomma }} CFA</span>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-        
-        <!-- Network Distribution -->
-        {% if data.network_distribution %}
-        <div class="p-4 bg-white/5 border border-white/10 rounded-xl">
-            <h3 class="text-white font-semibold mb-3">Network Distribution</h3>
-            <div class="space-y-2">
-                {% for n in data.network_distribution %}
-                <div>
-                    <div class="flex justify-between text-sm mb-1">
-                        <span class="text-white/80">{{ n.network_name }}</span>
-                        <span class="text-white/60">{{ n.count }} tx ({{ n.percentage }}%)</span>
-                    </div>
-                    <div class="h-2 bg-white/10 rounded-full overflow-hidden">
-                        <div class="h-full rounded-full" style="width: {{ n.percentage }}%; background-color: {{ n.network_color }};"></div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-white/50 text-sm">{{ n.count }} tx</span>
+                        <span class="text-white font-semibold text-sm w-12 text-right">{{ n.percentage }}%</span>
                     </div>
                 </div>
                 {% endfor %}
@@ -174,39 +382,59 @@
         </div>
         {% endif %}
         
-        <!-- Busiest Hour -->
+        <!-- Busiest Hour - Visual -->
         {% if data.busiest_hour is not None %}
-        <div class="p-4 bg-white/5 border border-white/10 rounded-xl">
-            <h3 class="text-white font-semibold mb-2">Busiest Hour</h3>
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                    <span class="text-amber-400 font-bold text-lg">{{ data.busiest_hour }}h</span>
+        <div class="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-2xl p-4">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-amber-500/20 flex items-center justify-center">
+                    <span class="text-3xl">⏰</span>
                 </div>
-                <div>
-                    <p class="text-white">{{ data.busiest_hour }}:00 - {{ data.busiest_hour|add:1 }}:00</p>
-                    <p class="text-white/50 text-sm">{{ data.busiest_hour_count }} transactions</p>
+                <div class="flex-1">
+                    <p class="text-white/60 text-xs font-medium">PEAK HOUR</p>
+                    <p class="text-white font-bold text-2xl">{{ data.busiest_hour }}:00 - {{ data.busiest_hour|add:1 }}:00</p>
+                    <p class="text-amber-400/70 text-sm">{{ data.busiest_hour_count }} transactions</p>
                 </div>
+            </div>
+            <!-- Hour bar visualization -->
+            <div class="mt-4 flex gap-1">
+                {% for hour in "0123456789101112131415161718192021222324"|make_list %}
+                <div class="flex-1 rounded-full transition-all duration-300
+                           {% if hour == data.busiest_hour %}h-8 bg-amber-500{% else %}h-2 bg-white/10{% endif %}"></div>
+                {% endfor %}
             </div>
         </div>
         {% endif %}
         
-        <!-- Top Customers -->
+        <!-- Top Customers - Premium List -->
         {% if data.top_customers %}
-        <div class="p-4 bg-white/5 border border-white/10 rounded-xl">
-            <h3 class="text-white font-semibold mb-3">Top Customers (This Week)</h3>
+        <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-white font-semibold flex items-center gap-2">
+                    👑 Top Customers
+                </h3>
+                <span class="text-white/40 text-xs">This week</span>
+            </div>
+            
             <div class="space-y-3">
                 {% for c in data.top_customers %}
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-primary-500/20 flex items-center justify-center text-primary-400 font-bold text-sm">
-                            {{ forloop.counter }}
-                        </div>
-                        <div>
-                            <p class="text-white text-sm">{{ c.phone }}</p>
-                            <p class="text-white/50 text-xs">{{ c.transaction_count }} transactions</p>
-                        </div>
+                <div class="flex items-center gap-3 p-3 rounded-xl 
+                            {% if forloop.counter == 1 %}bg-gradient-to-r from-amber-500/20 to-transparent border border-amber-500/30
+                            {% elif forloop.counter == 2 %}bg-gradient-to-r from-slate-400/20 to-transparent border border-slate-400/30
+                            {% else %}bg-gradient-to-r from-orange-700/20 to-transparent border border-orange-700/30{% endif %}">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg
+                                {% if forloop.counter == 1 %}bg-amber-500/30 text-amber-300
+                                {% elif forloop.counter == 2 %}bg-slate-400/30 text-slate-300
+                                {% else %}bg-orange-700/30 text-orange-400{% endif %}">
+                        {{ forloop.counter }}
                     </div>
-                    <span class="text-white/80 font-medium">{{ c.total_amount|floatformat:0|intcomma }}</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-white font-medium truncate">{{ c.phone }}</p>
+                        <p class="text-white/50 text-xs">{{ c.transaction_count }} transactions</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-white font-bold">{{ c.total_amount|floatformat:0|intcomma }}</p>
+                        <p class="text-white/40 text-xs">CFA</p>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -214,9 +442,30 @@
         {% endif %}
         
         <!-- Report metadata -->
-        <div class="text-center text-white/40 text-xs pt-4">
-            Generated: {{ data.generated_at|slice:":19" }}
+        <div class="text-center pt-4 space-y-1">
+            <p class="text-white/30 text-xs">Report generated {{ data.generated_at|slice:":19" }}</p>
+            <p class="text-white/20 text-xs">{{ kiosk.name }}</p>
         </div>
+        
     </main>
 </div>
+
+<style>
+    @keyframes pulse-slow {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+    .animate-pulse-slow {
+        animation: pulse-slow 3s ease-in-out infinite;
+    }
+</style>
+
+<script>
+function reportApp() {
+    return {
+        comparisonPeriod: 'yesterday',
+        showFloatDetails: false,
+    }
+}
+</script>
 {% endblock %}

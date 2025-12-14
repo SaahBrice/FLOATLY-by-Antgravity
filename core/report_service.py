@@ -244,8 +244,70 @@ def generate_report_data(kiosk, date=None):
             'threshold': LOW_BALANCE_THRESHOLD
         })
     
+    # 14. Profit per transaction (efficiency metric)
+    if data['transaction_count'] > 0:
+        data['profit_per_transaction'] = round(data['total_profit'] / data['transaction_count'], 2)
+    else:
+        data['profit_per_transaction'] = 0
+    
+    # 15. Hourly activity breakdown (for chart)
+    hourly_data = today_txs.annotate(
+        hour=ExtractHour('timestamp')
+    ).values('hour').annotate(
+        count=Count('id'),
+        amount=Coalesce(Sum('amount'), Decimal('0')),
+        profit=Coalesce(Sum('profit'), Decimal('0'))
+    ).order_by('hour')
+    
+    data['hourly_breakdown'] = [
+        {
+            'hour': h['hour'],
+            'count': h['count'],
+            'amount': float(h['amount']),
+            'profit': float(h['profit']),
+        }
+        for h in hourly_data
+    ]
+    
+    # 16. Profit trend (last 7 days)
+    profit_trend = []
+    for i in range(7):
+        trend_date = date - timedelta(days=i)
+        day_profit = float(Transaction.objects.filter(
+            kiosk=kiosk,
+            timestamp__date=trend_date
+        ).aggregate(total=Coalesce(Sum('profit'), Decimal('0')))['total'])
+        profit_trend.append({
+            'date': trend_date.isoformat(),
+            'day': trend_date.strftime('%a'),
+            'profit': day_profit
+        })
+    data['profit_trend'] = list(reversed(profit_trend))
+    
+    # 17. Success streak (consecutive profitable days)
+    streak = 0
+    check_date = date
+    while True:
+        day_profit = Transaction.objects.filter(
+            kiosk=kiosk,
+            timestamp__date=check_date
+        ).aggregate(total=Coalesce(Sum('profit'), Decimal('0')))['total']
+        if day_profit > 0:
+            streak += 1
+            check_date = check_date - timedelta(days=1)
+        else:
+            break
+        if streak >= 30:  # Cap at 30 days
+            break
+    data['profit_streak'] = streak
+    
+    # 18. Growth indicators
+    data['is_growing'] = data['vs_yesterday_percent'] > 0 and data['vs_last_week_percent'] > 0
+    data['needs_attention'] = len(data['low_balance_alerts']) > 0
+    
     # Metadata
     data['generated_at'] = timezone.now().isoformat()
     data['kiosk_name'] = kiosk.name
+    data['report_version'] = '2.0'
     
     return data
