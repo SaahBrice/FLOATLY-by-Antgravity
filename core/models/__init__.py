@@ -8,6 +8,8 @@ Complete data structure for the mobile money agent logbook:
 - Network: Mobile money networks (MTN, Orange, etc.)
 - CommissionRate: Commission rules per network and amount range
 - Transaction: Every money movement with auto-calculated profit
+- DailyOpeningBalance: Daily opening cash and float balances
+- NetworkFloatBalance: Per-network float tracking
 - Notification: Alerts, invites, and system messages
 - PushSubscription: Push notification subscriptions
 - NotificationPreference: User notification settings
@@ -23,6 +25,7 @@ from .user import User, phone_validator
 from .kiosk import Kiosk, KioskMember
 from .network import Network, CommissionRate
 from .transaction import Transaction
+from .daily_balance import DailyOpeningBalance, NetworkFloatBalance
 from .notification import Notification, PushSubscription, NotificationPreference
 from .invitation import KioskInvitation
 from .fraud import FraudReport, Feedback
@@ -46,6 +49,10 @@ __all__ = [
     
     # Transaction
     'Transaction',
+    
+    # Daily Balance
+    'DailyOpeningBalance',
+    'NetworkFloatBalance',
     
     # Notification
     'Notification',

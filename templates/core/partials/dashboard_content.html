@@ -2,6 +2,28 @@
 <div id="dashboard-content" class="space-y-6">
     
     {% if active_kiosk %}
+    
+    <!-- Day Not Started Warning Banner -->
+    {% if not day_started %}
+    <a href="{% url 'core:start_day' %}" 
+       class="block p-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 rounded-2xl hover:from-amber-500/30 hover:to-orange-500/30 transition">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+            </div>
+            <div class="flex-1">
+                <p class="text-amber-300 font-semibold text-sm">Start Your Day</p>
+                <p class="text-amber-300/70 text-xs">Set your opening balances to begin accurate tracking</p>
+            </div>
+            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+        </div>
+    </a>
+    {% endif %}
+    
     <!-- Balance Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Cash Balance -->
@@ -29,8 +51,9 @@
             </div>
         </div>
         
-        <!-- Float Balance -->
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-6 shadow-xl">
+        <!-- Float Balance (with per-network breakdown) -->
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-6 shadow-xl"
+             x-data="{ showBreakdown: false }">
             <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
             <div class="relative">
                 <div class="flex items-center justify-between mb-4">
@@ -51,6 +74,33 @@
                     </svg>
                     Digital money available
                 </p>
+                
+                <!-- Per-network breakdown toggle -->
+                {% if float_per_network %}
+                <button @click="showBreakdown = !showBreakdown" 
+                        class="mt-3 text-xs text-white/60 hover:text-white flex items-center gap-1 transition">
+                    <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': showBreakdown}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                    View per network
+                </button>
+                
+                <!-- Network breakdown (collapsible) -->
+                <div x-show="showBreakdown" x-transition class="mt-3 pt-3 border-t border-white/20 space-y-2">
+                    {% for network_id, data in float_per_network.items %}
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded text-xs font-bold flex items-center justify-center"
+                                  style="background-color: {{ data.network.color }}30; color: {{ data.network.color }};">
+                                {{ data.network.code|slice:":2" }}
+                            </span>
+                            <span class="text-white/80 text-sm">{{ data.network.name }}</span>
+                        </div>
+                        <span class="text-white font-semibold text-sm">{{ data.balance|floatformat:0 }} CFA</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -13,6 +13,7 @@ from . import notification_views
 from . import team_views
 from . import fraud_views
 from . import feedback_views
+from . import daily_balance_views
 
 app_name = 'core'
 
@@ -58,6 +59,18 @@ urlpatterns = [
     # Kiosk management
     path('kiosk/<slug:slug>/edit/', kiosk_views.EditKioskView.as_view(), name='edit_kiosk'),
     path('kiosk/<slug:slug>/delete/', kiosk_views.DeleteKioskView.as_view(), name='delete_kiosk'),
+    
+    # =========================================================================
+    # DAILY BALANCE (START DAY)
+    # =========================================================================
+    
+    # Start Day - set opening balances
+    path('start-day/', daily_balance_views.StartDayView.as_view(), name='start_day'),
+    path('start-day/<slug:slug>/', daily_balance_views.StartDayView.as_view(), name='start_day_kiosk'),
+    
+    # Start Day status API
+    path('api/start-day-status/', daily_balance_views.StartDayStatusView.as_view(), name='start_day_status'),
+
     
     # =========================================================================
     # TRANSACTIONS

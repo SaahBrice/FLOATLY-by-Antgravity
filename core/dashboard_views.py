@@ -70,6 +70,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             return {
                 'cash_balance': Decimal('0'),
                 'float_balance': Decimal('0'),
+                'float_per_network': {},
+                'day_started': False,
                 'today_profit': Decimal('0'),
                 'today_count': 0,
                 'unread_alerts': 0,
@@ -79,19 +81,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         # Get all transactions for balance calculation
         all_transactions = kiosk.transactions.all()
         
-        # Calculate balances using the manager method
-        balances = all_transactions.calculate_balances()
+        # Calculate balances using the enhanced manager method
+        # This now uses opening balance + today's transactions
+        balances = all_transactions.calculate_balances(kiosk=kiosk)
         
-        # Today's transactions
+        # Today's transaction count (profit already included in balances)
         today = timezone.now().date()
-        today_transactions = all_transactions.filter(
-            timestamp__date=today
-        )
-        
-        today_stats = today_transactions.aggregate(
-            total_profit=Sum('profit'),
-            count=Count('id')
-        )
+        today_count = all_transactions.filter(timestamp__date=today).count()
         
         # Recent transactions (last 5)
         recent = all_transactions.select_related('network', 'recorded_by')[:5]
@@ -99,8 +95,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         return {
             'cash_balance': balances.get('cash_balance', Decimal('0')),
             'float_balance': balances.get('float_balance', Decimal('0')),
-            'today_profit': today_stats['total_profit'] or Decimal('0'),
-            'today_count': today_stats['count'] or 0,
+            'float_per_network': balances.get('float_per_network', {}),
+            'day_started': balances.get('day_started', False),
+            'today_profit': balances.get('total_profit', Decimal('0')),
+            'today_count': today_count,
             'recent_transactions': recent,
         }
     

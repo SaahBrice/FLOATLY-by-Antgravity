@@ -26,6 +26,7 @@ from .notification_admin import (
     KioskInvitationAdmin
 )
 from .fraud_admin import FraudReportAdmin
+from .daily_balance_admin import DailyOpeningBalanceAdmin
 
 
 __all__ = [
@@ -40,4 +41,6 @@ __all__ = [
     'NotificationPreferenceAdmin',
     'KioskInvitationAdmin',
     'FraudReportAdmin',
+    'DailyOpeningBalanceAdmin',
 ]
+
